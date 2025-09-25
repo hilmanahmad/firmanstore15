@@ -14,12 +14,16 @@ class ItemHistoryService
         $this->itemHistory = $itemHistory;
     }
 
-    public function getByArrayDT($rows, $offset, $searchKey, $itemId = null)
+    public function getByArrayDT($rows, $offset, $searchKey, $itemId = null, $typeId = null)
     {
         $query = $this->itemHistory->query();
 
         if ($itemId) {
             $query = $query->where('item_id', $itemId);
+        }
+
+        if ($typeId) {
+            $query = $query->where('type_id', $typeId);
         }
 
         if ($rows) {
@@ -42,6 +46,7 @@ class ItemHistoryService
         $id = Str::uuid();
         $data = [
             'item_id' => $request->item_id,
+            'type_id' => $request->type_id,
             'purchase_price' => str_replace(".", "", $request->purchase_price),
             'qty' => $request->qty,
         ];

@@ -62,6 +62,7 @@
                                             <th>No</th>
                                             <th>Pelanggan</th>
                                             <th>Barang</th>
+                                            <th>Satuan Barang</th>
                                             <th>Jumlah</th>
                                             <th>Harga Beli</th>
                                             <th>Harga Jual</th>
@@ -115,6 +116,8 @@
                                                                 {{ $item->customer->name }}</td>
                                                             <td rowspan="{{ $item->detail->count() }}">
                                                                 {{ $item->item->name }}</td>
+                                                            <td rowspan="{{ $item->detail->count() }}">
+                                                                {{ $item->type->name }}</td>
                                                         @endif
                                                         <td>{{ $detail->qty }}</td>
                                                         <td>{{ number_format($detail->itemHistory->purchase_price, 0, ',', '.') }}
@@ -134,6 +137,7 @@
                                                     <td>{{ $loop->iteration }}</td>
                                                     <td>{{ $item->customer->name }}</td>
                                                     <td>{{ $item->item->name }}</td>
+                                                    <td>{{ $item->type->name }}</td>
                                                     <td>{{ $item->qty }}</td>
                                                     <td>0</td>
                                                     <td>0</td>
@@ -146,7 +150,8 @@
                                     <tfoot>
                                         <tr style="font-weight: bold; background-color: #f8f9fa;">
                                             <td colspan="3" class="text-center">TOTAL</td>
-                                            <td>{{ number_format($grand_total_qty, 0, ',', '.') }}</td>
+                                            <td></td>
+                                            <td></td>
                                             <td></td>
                                             <td></td>
                                             <td></td>

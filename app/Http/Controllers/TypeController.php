@@ -2,32 +2,31 @@
 
 namespace App\Http\Controllers;
 
-use Carbon\Carbon;
 use App\Models\Customer;
 use Illuminate\Http\Request;
-use App\Helpers\StringHelper;
+use App\Services\CategoryService;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use App\Services\TransactionService;
+use App\Services\TypeService;
 use Illuminate\Support\Facades\Validator;
 
-class TransactionController extends Controller
+class TypeController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
 
-    protected $transaction;
-    public function __construct(TransactionService $transaction)
+    protected $type;
+    public function __construct(TypeService $type)
     {
-        $this->transaction = $transaction;
+        $this->type = $type;
     }
 
     public function index()
     {
-        return view('transaction.index', [
-            'title' => 'Transaksi',
-            'active' => 'transaction'
+        return view('type.index', [
+            'title' => 'Satuan Barang',
+            'active' => 'type'
         ]);
     }
 
@@ -40,37 +39,19 @@ class TransactionController extends Controller
         $rows = $row >= 10 ? $row : 20;
         $offset = ($page - 1) * $rows;
         $searchKey = $request->input('searchKey');
-        $customerId = $request->input('customer_id');
-        $itemId = $request->input('item_id');
-        $typeId = $request->input('type_id');
 
         // Get the data for the current page
 
         // dd($rows, $offset, $searchKey);
-        $query = $this->transaction->getByArrayDT($rows, $offset, $searchKey, $customerId, $itemId, $typeId);
+        $query = $this->type->getByArrayDT($rows, $offset, $searchKey);
         $data = [];
         foreach ($query as $key => $q) {
-            $profit = 0;
-            foreach ($q->detail as $detail) {
-                // Hitung profit per detail
-                $profit += ($q->selling_price - $detail->itemHistory->purchase_price) * $detail->qty;
-                // Simpan atau tampilkan profit sesuai kebutuhan
-            }
             $data[$key]['id'] = $q->id;
-            $data[$key]['customer_id'] = $q->customer_id;
-            $data[$key]['customer'] = $q->customer->name;
-            $data[$key]['item_id'] = $q->item_id;
-            $data[$key]['item'] = $q->item->name;
-            $data[$key]['type_id'] = $q->type_id;
-            $data[$key]['type'] = $q->type->name;
-            $data[$key]['qty'] = $q->qty;
-            $data[$key]['selling_price'] = StringHelper::formatRupiah($q->selling_price);
-            $data[$key]['profit'] = StringHelper::formatRupiah($profit);
-            $data[$key]['created_at'] = Carbon::parse($q->created_at)->format('d M Y');
+            $data[$key]['name'] = $q->name;
         }
 
         // Get the total count of the data
-        $count = $this->transaction->getByArrayDT(0, 0, $searchKey);
+        $count = $this->type->getByArrayDT(0, 0, $searchKey);
 
         $result = [
             "total" => $count,
@@ -96,20 +77,19 @@ class TransactionController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'customer_id' => 'required',
-            'item_id' => 'required',
+            'name' => 'required|unique:customers,name'
         ]);
 
         if (!$request->id && $validator->fails()) {
             return response()->json([
                 'status' => false,
-                'message' => $validator->errors()->first('item_id') // Menampilkan pesan error pertama untuk field 'name'
+                'message' => $validator->errors()->first('name') // Menampilkan pesan error pertama untuk field 'name'
             ]);
         }
         try {
             DB::beginTransaction();
 
-            $this->transaction->store($request);
+            $this->type->store($request);
 
             DB::commit();
 
@@ -151,7 +131,7 @@ class TransactionController extends Controller
         try {
             DB::beginTransaction();
 
-            $this->transaction->destroy($id);
+            $this->type->destroy($id);
 
             DB::commit();
 

@@ -19,8 +19,14 @@
                                         <label for="">Barang</label>
                                         <input type="hidden" id="id" name="id">
                                         <input type="hidden" id="itemId">
+                                        <input type="hidden" id="typeId">
                                         <select name="item_id" id="item_id"
                                             class="form-control form-control-sm item_id"></select>
+                                    </div>
+                                    <div class="col-md-12 mb-3">
+                                        <label for="">Satuan Barang</label>
+                                        <select name="type_id" id="type_id"
+                                            class="form-control form-control-sm type_id"></select>
                                     </div>
                                     <div class="col-md-12 mb-3">
                                         <label for="">Harga Beli</label>
@@ -59,8 +65,16 @@
                                     </div>
                                     <div class="col-sm-12 col-md-9 mb-2">
                                         <div class="user-list-files d-flex float-right">
-                                            <select name="item_id" id="id_item"
-                                                class="form-control form-control-sm id_item" onchange="filter()"></select>
+                                            <div class="mr-2">
+                                                <select name="item_id" id="id_item"
+                                                    class="form-control form-control-sm id_item ml-2"
+                                                    onchange="filter()"></select>
+                                            </div>
+                                            <div class="mr-2">
+                                                <select name="type_id" id="id_type"
+                                                    class="form-control form-control-sm id_type"
+                                                    onchange="filter()"></select>
+                                            </div>
                                             <input type="search" class="form-control form-control-sm ml-2" id="searchKey"
                                                 placeholder="Cari">
                                             <a class="iq-bg-primary" href="javascript:void();" onclick="searchData()">
@@ -79,11 +93,14 @@
                                                 align="center">#</th>
                                             <th field="id" hidden></th>
                                             <th field="item_id" hidden></th>
+                                            <th field="type_id" hidden></th>
                                             <th field="created_at" width="250" halign="center" align="center"
                                                 sortable="true">Tanggal
                                                 Masuk
                                             </th>
                                             <th field="item" width="250" halign="center" sortable="true">Barang
+                                            </th>
+                                            <th field="type" width="250" halign="center" sortable="true">Satuan
                                             </th>
                                             <th field="purchase_price" width="250" halign="center" sortable="true">
                                                 Harga
@@ -116,7 +133,9 @@
 <script type="text/javascript">
     $(function() {
         item();
+        type();
         item_filter();
+        type_filter();
         $("form").submit(function(event) {
             event.preventDefault(); // Mencegah reload halaman
             showLoadingButton(event);

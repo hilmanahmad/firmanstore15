@@ -15,6 +15,7 @@ class Transaction extends Model
         'id',
         'customer_id',
         'item_id',
+        'type_id',
         'qty',
         'selling_price',
     ];
@@ -27,6 +28,13 @@ class Transaction extends Model
     public function item()
     {
         return $this->belongsTo(Item::class, 'item_id', 'id');
+    }
+
+    public function type()
+    {
+        return $this->belongsTo(Type::class, 'type_id', 'id')->withDefault(
+            ['name' => '']
+        );
     }
 
     public function detail()

@@ -41,11 +41,12 @@ class ItemHistoryController extends Controller
         $offset = ($page - 1) * $rows;
         $searchKey = $request->input('searchKey');
         $itemId = $request->input('item_id');
+        $typeId = $request->input('type_id');
 
         // Get the data for the current page
 
         // dd($rows, $offset, $searchKey);
-        $query = $this->itemHistory->getByArrayDT($rows, $offset, $searchKey, $itemId);
+        $query = $this->itemHistory->getByArrayDT($rows, $offset, $searchKey, $itemId, $typeId);
         $data = [];
         foreach ($query as $key => $q) {
             $profit = 0;
@@ -58,6 +59,8 @@ class ItemHistoryController extends Controller
             $data[$key]['id'] = $q->id;
             $data[$key]['item_id'] = $q->item_id;
             $data[$key]['item'] = $q->item->name;
+            $data[$key]['type_id'] = $q->type_id;
+            $data[$key]['type'] = $q->type->name;
             $data[$key]['purchase_price'] = StringHelper::formatRupiah($q->purchase_price);
             $data[$key]['qty'] = $q->qty;
             $data[$key]['qty_sold'] = $q->qty_sold;

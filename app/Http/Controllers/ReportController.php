@@ -26,7 +26,7 @@ class ReportController extends Controller
     {
         $data = [];
         if ($request->_token) {
-            $data = Transaction::query()->with('detail')->whereBetween('created_at', [$request->start_date, $request->end_date]);
+            $data = Transaction::query()->with('detail')->whereDate('created_at', '>=', $request->start_date)->whereDate('created_at', '<=', $request->end_date);
             if ($request->customer_id) {
                 $data = $data->where('customer_id', $request->customer_id);
             }

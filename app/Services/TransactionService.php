@@ -11,13 +11,15 @@ use App\Models\TransactionDetail;
 class TransactionService
 {
     protected $transaction;
+    protected $transactionDetail;
 
-    public function __construct(Transaction $transaction)
+    public function __construct(Transaction $transaction, TransactionDetail $transactionDetail)
     {
         $this->transaction = $transaction;
+        $this->transactionDetail = $transactionDetail;
     }
 
-    public function getByArrayDT($rows, $offset, $searchKey, $customerId = null, $itemId = null)
+    public function getByArrayDT($rows, $offset, $searchKey, $customerId = null, $itemId = null, $typeId = null)
     {
         $query = $this->transaction->query();
 
@@ -29,6 +31,9 @@ class TransactionService
             $query = $query->where('item_id', $itemId);
         }
 
+        if ($typeId) {
+            $query = $query->where('type_id', $typeId);
+        }
 
         if ($rows) {
             return $query->whereHas('customer', function ($q) use ($searchKey) {
@@ -70,6 +75,7 @@ class TransactionService
         $data = [
             'customer_id' => $request->customer_id,
             'item_id' => $request->item_id,
+            'type_id' => $request->type_id,
             'qty' => $request->qty,
             'selling_price' => str_replace('.', '', $request->selling_price),
         ];
@@ -94,6 +100,7 @@ class TransactionService
         $remainingQty = $request->qty;
         $items = ItemHistory::where([
             'item_id' => $request->item_id,
+            'type_id' => $request->type_id,
             'deleted_at' => null
         ])->whereRaw('qty > qty_sold')->orderBy('created_at', 'ASC')->get();
 
@@ -132,6 +139,15 @@ class TransactionService
 
     public function destroy($id)
     {
+        $tranDetail = TransactionDetail::where('transaction_id', $id)->get();
+
+        foreach ($tranDetail as $td) {
+            $itemHist = ItemHistory::where('id', $td->item_history_id)->first();
+            $itemHist->update([
+                'qty_sold' => $itemHist->qty_sold - $td->qty
+            ]);
+        }
         $this->transaction->where('id', $id)->delete();
+        $this->transactionDetail->where('transaction_id', $id)->delete();
     }
 }

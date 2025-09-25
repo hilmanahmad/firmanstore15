@@ -24,10 +24,12 @@ function editData(id, row, pageNumber) {
     $("#id").val(rowData.id);
     $("#customerId").val(rowData.customer_id);
     $("#itemId").val(rowData.item_id);
+    $("#typeId").val(rowData.type_id);
     $("#purchase_price").val(rowData.purchase_price);
     $("#qty").val(rowData.qty);
     $("#selling_price").val(rowData.selling_price);
     item();
+    type();
     customer();
     $(".modal").modal("show");
 }
@@ -43,10 +45,12 @@ function searchData() {
 function filter() {
     var customerId = $("#id_customer").val();
     var itemId = $("#id_item").val();
+    var typeId = $("#id_type").val();
 
     $("#datagrid").datagrid("load", {
         customer_id: customerId,
         item_id: itemId,
+        type_id: typeId,
     });
 }
 
@@ -262,6 +266,79 @@ function customer() {
     }
 }
 
+function type() {
+    var type = $("#typeId").val();
+
+    $(".type_id").select2({
+        allowClear: true,
+        width: "100%",
+        ajax: {
+            url: "/option-ajax-where",
+            dataType: "json",
+            delay: 250,
+            data: function (params) {
+                return {
+                    table: "types",
+                    value: "id",
+                    order: "name",
+                    whereName: "name", // Menggunakan districtId untuk filtering awal
+                    whereValue: params.term, // Input pengguna
+                };
+            },
+            processResults: function (data) {
+                return {
+                    results: $.map(data, function (item) {
+                        return {
+                            id: item.id,
+                            text: item.name.toUpperCase(),
+                        };
+                    }),
+                };
+            },
+            cache: true,
+        },
+        placeholder: "-- Pilih --",
+        language: {
+            inputTooShort: function () {
+                return "Masukkan minimal 3 karakter";
+            },
+            noResults: function () {
+                return "Tidak ada hasil yang ditemukan";
+            },
+            searching: function () {
+                return "Mencari...";
+            },
+        },
+    });
+
+    // Jika typeId ada, lakukan permintaan untuk data spesifik dan langsung pilih
+    if (type) {
+        $.ajax({
+            url: "/option-ajax-where",
+            dataType: "json",
+            data: {
+                table: "types",
+                value: "id",
+                order: "name",
+                whereName: "id", // Menggunakan districtId untuk filtering awal
+                whereValue: type, // Input pengguna
+            },
+            success: function (data) {
+                if (data && data.length > 0) {
+                    var item = data[0];
+                    var option = new Option(
+                        item.name.toUpperCase(),
+                        item.id,
+                        true,
+                        true
+                    );
+                    $(".type_id").append(option).trigger("change"); // Menambahkan dan memilih opsi di Select2
+                }
+            },
+        });
+    }
+}
+
 function item_filter() {
     $(".id_item").select2({
         allowClear: true,
@@ -333,6 +410,47 @@ function customer_filter() {
             cache: true,
         },
         placeholder: "Pilih Pelanggan",
+        language: {
+            noResults: function () {
+                return "Tidak ada hasil yang ditemukan";
+            },
+            searching: function () {
+                return "Mencari...";
+            },
+        },
+    });
+}
+
+function type_filter() {
+    $(".id_type").select2({
+        allowClear: true,
+        width: "100%",
+        ajax: {
+            url: "/option-ajax-where",
+            dataType: "json",
+            delay: 250,
+            data: function (params) {
+                return {
+                    table: "types",
+                    value: "id",
+                    order: "name",
+                    whereName: "name", // Menggunakan districtId untuk filtering awal
+                    whereValue: params.term, // Input pengguna
+                };
+            },
+            processResults: function (data) {
+                return {
+                    results: $.map(data, function (item) {
+                        return {
+                            id: item.id,
+                            text: item.name.toUpperCase(),
+                        };
+                    }),
+                };
+            },
+            cache: true,
+        },
+        placeholder: "Pilih Satuan Barang",
         language: {
             noResults: function () {
                 return "Tidak ada hasil yang ditemukan";

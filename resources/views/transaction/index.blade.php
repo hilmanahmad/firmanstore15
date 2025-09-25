@@ -20,6 +20,7 @@
                                         <input type="hidden" id="id" name="id">
                                         <input type="hidden" id="customerId">
                                         <input type="hidden" id="itemId">
+                                        <input type="hidden" id="typeId">
                                         <select name="customer_id" id="customer_id"
                                             class="form-control form-control-sm customer_id"></select>
                                     </div>
@@ -27,6 +28,11 @@
                                         <label for="">Barang</label>
                                         <select name="item_id" id="item_id"
                                             class="form-control form-control-sm item_id"></select>
+                                    </div>
+                                    <div class="col-md-12 mb-3">
+                                        <label for="">Satuan Barang</label>
+                                        <select name="type_id" id="type_id"
+                                            class="form-control form-control-sm type_id"></select>
                                     </div>
                                     <div class="col-md-12 mb-3">
                                         <label for="">Harga Jual</label>
@@ -66,7 +72,6 @@
                                     <div class="col-sm-12 col-md-9 mb-2">
                                         <div class="user-list-files d-flex float-right">
                                             <div class="mr-2">
-
                                                 <select name="customer_id" id="id_customer"
                                                     class="form-control form-control-sm id_customer"
                                                     onchange="filter()"></select>
@@ -74,6 +79,11 @@
                                             <div class="mr-2">
                                                 <select name="item_id" id="id_item"
                                                     class="form-control form-control-sm id_item ml-2"
+                                                    onchange="filter()"></select>
+                                            </div>
+                                            <div class="mr-2">
+                                                <select name="type_id" id="id_type"
+                                                    class="form-control form-control-sm id_type ml-2"
                                                     onchange="filter()"></select>
                                             </div>
                                             <input type="search" class="form-control form-control-sm" id="searchKey"
@@ -85,9 +95,9 @@
                                     </div>
                                 </div>
                                 <table id="datagrid" class="easyui-datagrid" url="{{ url('/transaction-datatable') }}"
-                                    toolbar="#tb" pagination="true" rownumbers="true" fitColumns="true" singleSelect="true"
-                                    striped="true" nowrap="false" loadMsg="Loading, Silahkan Tunggu..." method="get"
-                                    style="width:100%;height:auto;">
+                                    toolbar="#tb" pagination="true" rownumbers="true" fitColumns="true"
+                                    singleSelect="true" striped="true" nowrap="false"
+                                    loadMsg="Loading, Silahkan Tunggu..." method="get" style="width:100%;height:auto;">
                                     <thead>
                                         <tr>
                                             <th field="action" formatter="action" width="100" halign="center"
@@ -95,6 +105,7 @@
                                             <th field="id" hidden></th>
                                             <th field="customer_id" hidden></th>
                                             <th field="item_id" hidden></th>
+                                            <th field="type_id" hidden></th>
                                             <th field="created_at" width="250" halign="center" sortable="true">
                                                 Tanggal
                                                 Transaksi
@@ -103,6 +114,9 @@
                                                 Pelanggan
                                             </th>
                                             <th field="item" width="250" halign="center" sortable="true">Barang
+                                            </th>
+                                            <th field="type" width="250" halign="center" sortable="true">Satuan
+                                                Barang
                                             </th>
                                             <th field="selling_price" width="250" halign="center" sortable="true">
                                                 Harga
@@ -135,6 +149,8 @@
         customer_filter();
         item();
         item_filter();
+        type();
+        type_filter();
         $("form").submit(function(event) {
             event.preventDefault(); // Mencegah reload halaman
             showLoadingButton(event);

@@ -6,6 +6,7 @@ use App\Http\Controllers\AjaxController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ItemController;
+use App\Http\Controllers\TypeController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerController;
@@ -41,6 +42,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('menu-datatable', [MenuController::class, 'datatable'])->name('menudatatable');
     Route::resource('customer', CustomerController::class);
     Route::get('customer-datatable', [CustomerController::class, 'datatable'])->name('customerdatatable');
+    Route::resource('type', TypeController::class);
+    Route::get('type-datatable', [TypeController::class, 'datatable'])->name('typedatatable');
     Route::resource('category', CategoryController::class);
     Route::get('category-datatable', [CategoryController::class, 'datatable'])->name('categorydatatable');
     Route::resource('item', ItemController::class);

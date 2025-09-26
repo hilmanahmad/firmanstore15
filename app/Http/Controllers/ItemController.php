@@ -61,7 +61,10 @@ class ItemController extends Controller
             $data[$key]['name'] = $q->name;
             $data[$key]['category_id'] = $q->category_id;
             $data[$key]['category'] = $q->category->name;
-            $data[$key]['qty'] = isset($q->itemHistory) ? $q->itemHistory->sum(function ($item) {
+            $data[$key]['qty_dus'] = isset($q->itemHistory) ? $q->itemHistory->where('type_id', 'd69a5c93-ec7b-4a08-bcb4-514402b29e5b')->sum(function ($item) {
+                return $item->qty - $item->qty_sold;
+            }) : 0;
+            $data[$key]['qty_pcs'] = isset($q->itemHistory) ? $q->itemHistory->where('type_id', '384c6870-3e9c-4e99-be56-6617256c69c6')->sum(function ($item) {
                 return $item->qty - $item->qty_sold;
             }) : 0;
             $data[$key]['profit'] = StringHelper::formatRupiah($profit);

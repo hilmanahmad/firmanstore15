@@ -77,7 +77,9 @@
                                             </th>
                                             <th field="name" width="250" halign="center" sortable="true">Nama
                                             </th>
-                                            <th field="qty" width="250" halign="center" sortable="true">Jumlah
+                                            <th field="qty_dus" width="250" halign="center" sortable="true">Jumlah Dus
+                                            </th>
+                                            <th field="qty_pcs" width="250" halign="center" sortable="true">Jumlah Pcs
                                             </th>
                                             <th field="profit" width="250" halign="center" sortable="true">Keuntungan
                                             </th>

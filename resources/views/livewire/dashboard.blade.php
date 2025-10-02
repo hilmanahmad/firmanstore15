@@ -231,7 +231,8 @@
                                     <strong class="text-success">Rp
                                         {{ number_format($transaction->selling_price * $transaction->qty, 0, ',', '.') }}</strong>
                                     <br>
-                                    <small class="text-muted">{{ $transaction->detail->count() }} item</small>
+                                    <small class="text-muted">{{ $transaction->qty }}
+                                        {{ $transaction->type->name }}</small>
                                 </div>
                             </div>
                         @empty

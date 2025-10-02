@@ -66,12 +66,12 @@ class Dashboard extends Component
 
         // Sales data for selected period
         $salesData = Transaction::with('detail')->selectRaw('selling_price * qty as qty')
-            ->whereBetween('created_at', [$this->startDate, $this->endDate])
+            ->whereBetween(DB::raw('DATE(created_at)'), [$this->startDate, $this->endDate])
             ->get();
 
         $totalSales = $salesData->sum('qty');
         $salesData = Transaction::with('detail')
-            ->whereBetween('created_at', [$this->startDate, $this->endDate])
+            ->whereBetween(DB::raw('DATE(created_at)'), [$this->startDate, $this->endDate])
             ->get();
         $totalProfit = $this->calculateTotalProfit($salesData);
 
@@ -141,7 +141,7 @@ class Dashboard extends Component
     private function getChartData()
     {
         $dailySales = Transaction::selectRaw('DATE(created_at) as date, SUM(selling_price) as total')
-            ->whereBetween('created_at', [$this->startDate, $this->endDate])
+            ->whereBetween(DB::raw('DATE(created_at)'), [$this->startDate, $this->endDate])
             ->groupBy(DB::raw('DATE(created_at)'))
             ->orderBy('date')
             ->get();

@@ -75,8 +75,10 @@
                                                     class="form-control form-control-sm id_type"
                                                     onchange="filter()"></select>
                                             </div>
-                                            <input type="search" class="form-control form-control-sm ml-2" id="searchKey"
-                                                placeholder="Cari">
+                                            <div style="width: 180px;">
+                                                <input type="search" class="form-control form-control-sm" id="searchKey"
+                                                    placeholder="Cari">
+                                            </div>
                                             <a class="iq-bg-primary" href="javascript:void();" onclick="searchData()">
                                                 <i class="fa fa-search"></i>
                                             </a>

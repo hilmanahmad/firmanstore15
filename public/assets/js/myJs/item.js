@@ -102,74 +102,17 @@ document
     });
 
 function category() {
-    var category = $("#categoryId").val();
+    const categoryId = $("#categoryId").val();
 
-    $(".category_id").select2({
-        allowClear: true,
-        width: "100%",
-        ajax: {
-            url: "/option-ajax-where",
-            dataType: "json",
-            delay: 250,
-            data: function (params) {
-                return {
-                    table: "categories",
-                    value: "id",
-                    order: "name",
-                    whereName: "name", // Menggunakan districtId untuk filtering awal
-                    whereValue: params.term, // Input pengguna
-                };
-            },
-            processResults: function (data) {
-                return {
-                    results: $.map(data, function (category) {
-                        return {
-                            id: category.id,
-                            text: category.name.toUpperCase(),
-                        };
-                    }),
-                };
-            },
-            cache: true,
-        },
+    initSelect2Ajax({
+        selector: ".category_id",
+        table: "categories",
+        valueField: "id",
+        textField: "name",
+        orderField: "name",
+        searchField: "name",
         placeholder: "-- Pilih --",
-        language: {
-            inputTooShort: function () {
-                return "Masukkan minimal 3 karakter";
-            },
-            noResults: function () {
-                return "Tidak ada hasil yang ditemukan";
-            },
-            searching: function () {
-                return "Mencari...";
-            },
-        },
+        preselectedId: categoryId,
+        formatText: (text) => text.toUpperCase(), // Format text menjadi uppercase
     });
-
-    // Jika categoryId ada, lakukan permintaan untuk data spesifik dan langsung pilih
-    if (category) {
-        $.ajax({
-            url: "/option-ajax-where",
-            dataType: "json",
-            data: {
-                table: "categories",
-                value: "id",
-                order: "name",
-                whereName: "id", // Menggunakan districtId untuk filtering awal
-                whereValue: category, // Input pengguna
-            },
-            success: function (data) {
-                if (data && data.length > 0) {
-                    var category = data[0];
-                    var option = new Option(
-                        category.name.toUpperCase(),
-                        category.id,
-                        true,
-                        true
-                    );
-                    $(".category_id").append(option).trigger("change"); // Menambahkan dan memilih opsi di Select2
-                }
-            },
-        });
-    }
 }

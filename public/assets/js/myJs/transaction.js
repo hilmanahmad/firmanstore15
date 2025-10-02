@@ -121,343 +121,97 @@ document
     });
 
 function item() {
-    var item = $("#itemId").val();
+    const itemId = $("#itemId").val();
 
-    $(".item_id").select2({
-        allowClear: true,
-        width: "100%",
-        ajax: {
-            url: "/option-ajax-where",
-            dataType: "json",
-            delay: 250,
-            data: function (params) {
-                return {
-                    table: "items",
-                    value: "id",
-                    order: "name",
-                    whereName: "name", // Menggunakan districtId untuk filtering awal
-                    whereValue: params.term, // Input pengguna
-                };
-            },
-            processResults: function (data) {
-                return {
-                    results: $.map(data, function (item) {
-                        return {
-                            id: item.id,
-                            text: item.name.toUpperCase(),
-                        };
-                    }),
-                };
-            },
-            cache: true,
-        },
+    initSelect2Ajax({
+        selector: ".item_id",
+        table: "items",
+        valueField: "id",
+        textField: "name",
+        orderField: "name",
+        searchField: "name",
         placeholder: "-- Pilih --",
-        language: {
-            inputTooShort: function () {
-                return "Masukkan minimal 3 karakter";
-            },
-            noResults: function () {
-                return "Tidak ada hasil yang ditemukan";
-            },
-            searching: function () {
-                return "Mencari...";
-            },
-        },
+        preselectedId: itemId,
+        formatText: (text) => text.toUpperCase(), // Format text menjadi uppercase
     });
-
-    // Jika itemId ada, lakukan permintaan untuk data spesifik dan langsung pilih
-    if (item) {
-        $.ajax({
-            url: "/option-ajax-where",
-            dataType: "json",
-            data: {
-                table: "items",
-                value: "id",
-                order: "name",
-                whereName: "id", // Menggunakan districtId untuk filtering awal
-                whereValue: item, // Input pengguna
-            },
-            success: function (data) {
-                if (data && data.length > 0) {
-                    var item = data[0];
-                    var option = new Option(
-                        item.name.toUpperCase(),
-                        item.id,
-                        true,
-                        true
-                    );
-                    $(".item_id").append(option).trigger("change"); // Menambahkan dan memilih opsi di Select2
-                }
-            },
-        });
-    }
 }
 
 function customer() {
-    var customer = $("#customerId").val();
+    const customerId = $("#customerId").val();
 
-    $(".customer_id").select2({
-        allowClear: true,
-        width: "100%",
-        ajax: {
-            url: "/option-ajax-where",
-            dataType: "json",
-            delay: 250,
-            data: function (params) {
-                return {
-                    table: "customers",
-                    value: "id",
-                    order: "name",
-                    whereName: "name", // Menggunakan districtId untuk filtering awal
-                    whereValue: params.term, // Input pengguna
-                };
-            },
-            processResults: function (data) {
-                return {
-                    results: $.map(data, function (customer) {
-                        return {
-                            id: customer.id,
-                            text: customer.name.toUpperCase(),
-                        };
-                    }),
-                };
-            },
-            cache: true,
-        },
+    initSelect2Ajax({
+        selector: ".customer_id",
+        table: "customers",
+        valueField: "id",
+        textField: "name",
+        orderField: "name",
+        searchField: "name",
         placeholder: "-- Pilih --",
-        language: {
-            inputTooShort: function () {
-                return "Masukkan minimal 3 karakter";
-            },
-            noResults: function () {
-                return "Tidak ada hasil yang ditemukan";
-            },
-            searching: function () {
-                return "Mencari...";
-            },
-        },
+        preselectedId: customerId,
+        formatText: (text) => text.toUpperCase(), // Format text menjadi uppercase
     });
-
-    // Jika itemId ada, lakukan permintaan untuk data spesifik dan langsung pilih
-    if (customer) {
-        $.ajax({
-            url: "/option-ajax-where",
-            dataType: "json",
-            data: {
-                table: "customers",
-                value: "id",
-                order: "name",
-                whereName: "id", // Menggunakan districtId untuk filtering awal
-                whereValue: customer, // Input pengguna
-            },
-            success: function (data) {
-                if (data && data.length > 0) {
-                    var customer = data[0];
-                    var option = new Option(
-                        customer.name.toUpperCase(),
-                        customer.id,
-                        true,
-                        true
-                    );
-                    $(".customer_id").append(option).trigger("change"); // Menambahkan dan memilih opsi di Select2
-                }
-            },
-        });
-    }
 }
 
 function type() {
-    var type = $("#typeId").val();
+    const typeId = $("#typeId").val();
 
-    $(".type_id").select2({
-        allowClear: true,
-        width: "100%",
-        ajax: {
-            url: "/option-ajax-where",
-            dataType: "json",
-            delay: 250,
-            data: function (params) {
-                return {
-                    table: "types",
-                    value: "id",
-                    order: "name",
-                    whereName: "name", // Menggunakan districtId untuk filtering awal
-                    whereValue: params.term, // Input pengguna
-                };
-            },
-            processResults: function (data) {
-                return {
-                    results: $.map(data, function (item) {
-                        return {
-                            id: item.id,
-                            text: item.name.toUpperCase(),
-                        };
-                    }),
-                };
-            },
-            cache: true,
-        },
+    initSelect2Ajax({
+        selector: ".type_id",
+        table: "types",
+        valueField: "id",
+        textField: "name",
+        orderField: "name",
+        searchField: "name",
         placeholder: "-- Pilih --",
-        language: {
-            inputTooShort: function () {
-                return "Masukkan minimal 3 karakter";
-            },
-            noResults: function () {
-                return "Tidak ada hasil yang ditemukan";
-            },
-            searching: function () {
-                return "Mencari...";
-            },
-        },
+        preselectedId: typeId,
+        formatText: (text) => text.toUpperCase(), // Format text menjadi uppercase
     });
-
-    // Jika typeId ada, lakukan permintaan untuk data spesifik dan langsung pilih
-    if (type) {
-        $.ajax({
-            url: "/option-ajax-where",
-            dataType: "json",
-            data: {
-                table: "types",
-                value: "id",
-                order: "name",
-                whereName: "id", // Menggunakan districtId untuk filtering awal
-                whereValue: type, // Input pengguna
-            },
-            success: function (data) {
-                if (data && data.length > 0) {
-                    var item = data[0];
-                    var option = new Option(
-                        item.name.toUpperCase(),
-                        item.id,
-                        true,
-                        true
-                    );
-                    $(".type_id").append(option).trigger("change"); // Menambahkan dan memilih opsi di Select2
-                }
-            },
-        });
-    }
 }
 
 function item_filter() {
-    $(".id_item").select2({
-        allowClear: true,
-        width: "100%",
-        ajax: {
-            url: "/option-ajax-where",
-            dataType: "json",
-            delay: 250,
-            data: function (params) {
-                return {
-                    table: "items",
-                    value: "id",
-                    order: "name",
-                    whereName: "name", // Menggunakan districtId untuk filtering awal
-                    whereValue: params.term, // Input pengguna
-                };
-            },
-            processResults: function (data) {
-                return {
-                    results: $.map(data, function (item) {
-                        return {
-                            id: item.id,
-                            text: item.name.toUpperCase(),
-                        };
-                    }),
-                };
-            },
-            cache: true,
-        },
-        placeholder: "Pilih Barang",
-        language: {
-            noResults: function () {
-                return "Tidak ada hasil yang ditemukan";
-            },
-            searching: function () {
-                return "Mencari...";
-            },
-        },
+    const idItem = $("#idItem").val();
+
+    initSelect2Ajax({
+        selector: ".id_item",
+        table: "items",
+        valueField: "id",
+        textField: "name",
+        orderField: "name",
+        searchField: "name",
+        placeholder: "-- Barang --",
+        preselectedId: idItem,
+        formatText: (text) => text.toUpperCase(), // Format text menjadi uppercase
     });
 }
 
 function customer_filter() {
-    $(".id_customer").select2({
-        allowClear: true,
-        width: "100%",
-        ajax: {
-            url: "/option-ajax-where",
-            dataType: "json",
-            delay: 250,
-            data: function (params) {
-                return {
-                    table: "customers",
-                    value: "id",
-                    order: "name",
-                    whereName: "name", // Menggunakan districtId untuk filtering awal
-                    whereValue: params.term, // Input pengguna
-                };
-            },
-            processResults: function (data) {
-                return {
-                    results: $.map(data, function (customer) {
-                        return {
-                            id: customer.id,
-                            text: customer.name.toUpperCase(),
-                        };
-                    }),
-                };
-            },
-            cache: true,
-        },
-        placeholder: "Pilih Pelanggan",
-        language: {
-            noResults: function () {
-                return "Tidak ada hasil yang ditemukan";
-            },
-            searching: function () {
-                return "Mencari...";
-            },
-        },
+    const idcustomer = $("#idcustomer").val();
+
+    initSelect2Ajax({
+        selector: ".id_customer",
+        table: "customers",
+        valueField: "id",
+        textField: "name",
+        orderField: "name",
+        searchField: "name",
+        placeholder: "-- Pelanggan --",
+        preselectedId: idcustomer,
+        formatText: (text) => text.toUpperCase(), // Format text menjadi uppercase
     });
 }
 
 function type_filter() {
-    $(".id_type").select2({
-        allowClear: true,
-        width: "100%",
-        ajax: {
-            url: "/option-ajax-where",
-            dataType: "json",
-            delay: 250,
-            data: function (params) {
-                return {
-                    table: "types",
-                    value: "id",
-                    order: "name",
-                    whereName: "name", // Menggunakan districtId untuk filtering awal
-                    whereValue: params.term, // Input pengguna
-                };
-            },
-            processResults: function (data) {
-                return {
-                    results: $.map(data, function (item) {
-                        return {
-                            id: item.id,
-                            text: item.name.toUpperCase(),
-                        };
-                    }),
-                };
-            },
-            cache: true,
-        },
-        placeholder: "Pilih Satuan Barang",
-        language: {
-            noResults: function () {
-                return "Tidak ada hasil yang ditemukan";
-            },
-            searching: function () {
-                return "Mencari...";
-            },
-        },
+    const idType = $("#idType").val();
+
+    initSelect2Ajax({
+        selector: ".id_type",
+        table: "types",
+        valueField: "id",
+        textField: "name",
+        orderField: "name",
+        searchField: "name",
+        placeholder: "-- Satuan Barang --",
+        preselectedId: idType,
+        formatText: (text) => text.toUpperCase(), // Format text menjadi uppercase
     });
 }

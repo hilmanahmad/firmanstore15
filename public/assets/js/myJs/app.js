@@ -250,3 +250,118 @@ function formatNumber(input) {
     }
     input.value = value; // Update nilai input
 }
+
+/**
+ * Fungsi reusable untuk membuat Select2 dengan AJAX
+ * @param {Object} config - Konfigurasi untuk Select2
+ * @param {string} config.selector - Selector elemen select
+ * @param {string} config.table - Nama tabel database
+ * @param {string} config.valueField - Field untuk value (default: 'id')
+ * @param {string} config.textField - Field untuk text (default: 'name')
+ * @param {string} config.orderField - Field untuk ordering (default: 'name')
+ * @param {string} config.searchField - Field untuk pencarian (default: 'name')
+ * @param {string} config.placeholder - Placeholder text
+ * @param {string} config.preselectedId - ID yang sudah dipilih sebelumnya
+ * @param {function} config.formatText - Fungsi untuk format text (opsional)
+ * @param {Object} config.additionalParams - Parameter tambahan untuk AJAX (opsional)
+ */
+function initSelect2Ajax(config) {
+    const {
+        selector,
+        table,
+        valueField = "id",
+        textField = "name",
+        orderField = "name",
+        searchField = "name",
+        placeholder = "-- Pilih --",
+        preselectedId = null,
+        formatText = null,
+        additionalParams = {},
+    } = config;
+
+    // Initialize Select2
+    $(selector).select2({
+        allowClear: true,
+        width: "100%",
+        ajax: {
+            url: "/option-ajax-where",
+            dataType: "json",
+            delay: 250,
+            data: function (params) {
+                return {
+                    table: table,
+                    value: valueField,
+                    order: orderField,
+                    whereName: searchField,
+                    whereValue: params.term,
+                    ...additionalParams,
+                };
+            },
+            processResults: function (data) {
+                return {
+                    results: $.map(data, function (item) {
+                        let text = item[textField];
+
+                        // Apply custom text formatting if provided
+                        if (formatText && typeof formatText === "function") {
+                            text = formatText(text, item);
+                        }
+
+                        return {
+                            id: item[valueField],
+                            text: text,
+                        };
+                    }),
+                };
+            },
+            cache: true,
+        },
+        placeholder: placeholder,
+        language: {
+            inputTooShort: function () {
+                return "Masukkan minimal 3 karakter";
+            },
+            noResults: function () {
+                return "Tidak ada hasil yang ditemukan";
+            },
+            searching: function () {
+                return "Mencari...";
+            },
+        },
+    });
+
+    // Preselect option if ID provided
+    if (preselectedId) {
+        $.ajax({
+            url: "/option-ajax-where",
+            dataType: "json",
+            data: {
+                table: table,
+                value: valueField,
+                order: orderField,
+                whereName: valueField,
+                whereValue: preselectedId,
+                ...additionalParams,
+            },
+            success: function (data) {
+                if (data && data.length > 0) {
+                    const item = data[0];
+                    let text = item[textField];
+
+                    // Apply custom text formatting if provided
+                    if (formatText && typeof formatText === "function") {
+                        text = formatText(text, item);
+                    }
+
+                    const option = new Option(
+                        text,
+                        item[valueField],
+                        true,
+                        true
+                    );
+                    $(selector).append(option).trigger("change");
+                }
+            },
+        });
+    }
+}

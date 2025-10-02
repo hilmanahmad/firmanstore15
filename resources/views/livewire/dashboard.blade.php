@@ -62,7 +62,7 @@
                 <div class="iq-card iq-card-block iq-card-stretch iq-card-height">
                     <div class="iq-card-body iq-box-relative text-center">
                         <div class="iq-box-absolute icon iq-icon-box rounded-circle iq-bg-success">
-                            <i class="ri-money-dollar-circle-line text-white"></i>
+                            <i class="ri-money-dollar-circle-line text-warning"></i>
                         </div>
                         <h6 class="text-secondary">Total Penjualan</h6>
                         <div class="d-flex align-items-center justify-content-center">
@@ -77,7 +77,7 @@
                 <div class="iq-card iq-card-block iq-card-stretch iq-card-height">
                     <div class="iq-card-body iq-box-relative text-center">
                         <div class="iq-box-absolute icon iq-icon-box rounded-circle iq-bg-primary">
-                            <i class="ri-line-chart-line text-white"></i>
+                            <i class="ri-money-dollar-circle-line text-primary"></i>
                         </div>
                         <h6 class="text-secondary">Total Keuntungan</h6>
                         <div class="d-flex align-items-center justify-content-center">

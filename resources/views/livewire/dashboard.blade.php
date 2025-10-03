@@ -49,7 +49,7 @@
                         </div>
                         <p class="text-secondary">Total Kategori</p>
                         <div class="d-flex align-items-center justify-content-between">
-                            <h4><b>{{ number_format($total_categories) }}</b></h4>
+                            <h4><b>{{ $total_categories }}</b></h4>
                         </div>
                     </div>
                 </div>
@@ -128,9 +128,21 @@
                         <div class="iq-header-title">
                             <h4 class="card-title">Grafik Penjualan Harian</h4>
                         </div>
+                        <div>
+                            <button onclick="renderChart()" class="btn btn-sm btn-primary">🔄 Refresh Chart</button>
+                            <button onclick="testChart()" class="btn btn-sm btn-info">🧪 Test Chart</button>
+                        </div>
                     </div>
                     <div class="iq-card-body" wire:ignore>
-                        <canvas id="salesChart" width="400" height="200"></canvas>
+                        <!-- Debug info -->
+                        <div id="chartDebug" style="font-size: 12px; color: #666; margin-bottom: 10px;">
+                            Status: Loading...
+                        </div>
+
+                        <!-- Canvas dengan wrapper -->
+                        <div style="position: relative; height: 400px; width: 100%;">
+                            <canvas id="salesChart"></canvas>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -244,139 +256,365 @@
         </div>
     </div>
 </div>
+<!-- Tambahkan di layout atau head -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
-@push('scripts')
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <!-- Script yang sama seperti di atas -->
-    <script>
-        let salesChart = null;
+<!-- Di body, setelah canvas -->
+<script>
+    let salesChart = null;
 
-        function initSalesChart() {
+    function updateDebug(message) {
+        const debugEl = document.getElementById('chartDebug');
+        if (debugEl) {
+            debugEl.innerHTML = message;
+        }
+        console.log('Chart Debug:', message);
+    }
+
+    async function renderChart() {
+        updateDebug('🔄 Memulai render chart...');
+
+        try {
+            // Get chart data from Laravel
+            const chartData = @json($chart_data ?? ['labels' => ['No Data'], 'data' => [0]]);
+            updateDebug('📊 Data chart diterima: ' + JSON.stringify(chartData));
+
             const ctx = document.getElementById('salesChart');
             if (!ctx) {
-                console.log('Canvas element not found');
+                updateDebug('❌ Canvas element tidak ditemukan!');
                 return;
             }
 
-            // Destroy existing chart if exists
+            if (typeof Chart === 'undefined') {
+                updateDebug('❌ Chart.js tidak tersedia!');
+                return;
+            }
+
+            // Destroy existing chart
             if (salesChart) {
                 salesChart.destroy();
+                updateDebug('🗑️ Chart sebelumnya dihapus');
             }
 
-            const chartData = @json($chart_data ?? ['labels' => [], 'data' => []]);
-            console.log('Chart data:', chartData); // Debug log
-
-            // Check if data exists
-            if (!chartData.labels || chartData.labels.length === 0) {
-                ctx.getContext('2d').clearRect(0, 0, ctx.width, ctx.height);
-                const context = ctx.getContext('2d');
-                context.font = '16px Arial';
-                context.fillStyle = '#666';
-                context.textAlign = 'center';
-                context.fillText('Tidak ada data untuk ditampilkan', ctx.width / 2, ctx.height / 2);
-                return;
-            }
-
+            // Create line chart with enhanced styling
             salesChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: chartData.labels,
+                    labels: chartData.labels || ['No Data'],
                     datasets: [{
                         label: 'Penjualan Harian (Rp)',
-                        data: chartData.data,
-                        borderColor: '#667eea',
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        data: chartData.data || [0],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
                         borderWidth: 3,
-                        tension: 0.4,
                         fill: true,
-                        pointBackgroundColor: '#667eea',
+                        tension: 0.4,
+                        pointBackgroundColor: '#3b82f6',
                         pointBorderColor: '#ffffff',
                         pointBorderWidth: 2,
                         pointRadius: 6,
-                        pointHoverRadius: 8
+                        pointHoverRadius: 8,
+                        pointHoverBackgroundColor: '#1d4ed8',
+                        pointHoverBorderColor: '#ffffff',
+                        pointHoverBorderWidth: 3
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
                     plugins: {
                         title: {
                             display: true,
                             text: 'Trend Penjualan Harian',
                             font: {
-                                size: 16,
-                                weight: 'bold'
+                                size: 18,
+                                weight: 'bold',
+                                family: 'Inter, sans-serif'
                             },
-                            color: '#333'
+                            color: '#1f2937',
+                            padding: {
+                                top: 10,
+                                bottom: 20
+                            }
                         },
                         legend: {
                             display: true,
-                            position: 'top'
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    size: 14,
+                                    family: 'Inter, sans-serif'
+                                },
+                                color: '#374151',
+                                usePointStyle: true,
+                                pointStyle: 'circle'
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                            titleColor: '#ffffff',
+                            bodyColor: '#ffffff',
+                            borderColor: '#3b82f6',
+                            borderWidth: 2,
+                            cornerRadius: 8,
+                            displayColors: false,
+                            titleFont: {
+                                size: 14,
+                                weight: 'bold'
+                            },
+                            bodyFont: {
+                                size: 13
+                            },
+                            callbacks: {
+                                title: function(context) {
+                                    return '📅 Tanggal: ' + context[0].label;
+                                },
+                                label: function(context) {
+                                    const value = context.parsed.y ?? 0;
+                                    return '💰 Penjualan: Rp ' + new Intl.NumberFormat('id-ID').format(
+                                        value);
+                                }
+                            }
                         }
                     },
                     scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
-                                }
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Tanggal',
+                                font: {
+                                    size: 14,
+                                    weight: '600',
+                                    family: 'Inter, sans-serif'
+                                },
+                                color: '#374151'
                             },
                             grid: {
-                                color: 'rgba(0, 0, 0, 0.1)'
+                                display: true,
+                                color: 'rgba(156, 163, 175, 0.3)',
+                                borderDash: [2, 4]
+                            },
+                            ticks: {
+                                font: {
+                                    size: 12,
+                                    family: 'Inter, sans-serif'
+                                },
+                                color: '#6b7280'
                             }
                         },
-                        x: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Penjualan (Rupiah)',
+                                font: {
+                                    size: 14,
+                                    weight: '600',
+                                    family: 'Inter, sans-serif'
+                                },
+                                color: '#374151'
+                            },
                             grid: {
-                                color: 'rgba(0, 0, 0, 0.1)'
+                                display: true,
+                                color: 'rgba(156, 163, 175, 0.3)',
+                                borderDash: [2, 4]
+                            },
+                            ticks: {
+                                font: {
+                                    size: 12,
+                                    family: 'Inter, sans-serif'
+                                },
+                                color: '#6b7280',
+                                callback: function(value) {
+                                    if (value >= 1000000) {
+                                        return 'Rp ' + (value / 1000000).toFixed(1) + 'M';
+                                    } else if (value >= 1000) {
+                                        return 'Rp ' + (value / 1000).toFixed(0) + 'K';
+                                    }
+                                    return 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
+                                }
                             }
                         }
                     },
-                    interaction: {
-                        intersect: false,
-                        mode: 'index'
-                    },
                     elements: {
-                        point: {
-                            hoverRadius: 8
+                        line: {
+                            borderCapStyle: 'round',
+                            borderJoinStyle: 'round'
                         }
+                    },
+                    animation: {
+                        duration: 1500,
+                        easing: 'easeInOutQuart'
                     }
                 }
             });
+
+            updateDebug('✅ Line chart berhasil dibuat! (' + (chartData.labels?.length || 0) + ' data points)');
+
+        } catch (error) {
+            updateDebug('❌ Error saat membuat chart: ' + error.message);
+            console.error('Chart creation error:', error);
+        }
+    }
+
+    // Initialize chart on different events
+    document.addEventListener('DOMContentLoaded', function() {
+        updateDebug('🚀 DOM ready - akan render chart...');
+        setTimeout(renderChart, 300);
+    });
+
+    document.addEventListener('livewire:navigated', function() {
+        updateDebug('📍 Livewire navigated');
+        setTimeout(renderChart, 400);
+    });
+
+    document.addEventListener('livewire:updated', function() {
+        updateDebug('🔄 Livewire updated - refresh chart');
+        setTimeout(renderChart, 500);
+    });
+
+    // Listen for Livewire events
+    if (typeof Livewire !== 'undefined') {
+        Livewire.on('dashboardDataUpdated', () => {
+            updateDebug('📊 Dashboard data updated');
+            setTimeout(renderChart, 300);
+        });
+    }
+
+    // Test chart function with sample data
+    function testChart() {
+        updateDebug('🧪 Membuat test chart dengan data sample...');
+
+        const ctx = document.getElementById('salesChart');
+        if (!ctx) {
+            updateDebug('❌ Canvas element tidak ditemukan!');
+            return;
         }
 
-        // Initialize chart when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM loaded, initializing chart...');
-            setTimeout(() => {
-                initSalesChart();
-            }, 100);
-        });
-
-        // Initialize chart for Livewire navigation
-        document.addEventListener('livewire:navigated', function() {
-            console.log('Livewire navigated, initializing chart...');
-            setTimeout(() => {
-                initSalesChart();
-            }, 100);
-        });
-
-        // Listen for Livewire updates
-        document.addEventListener('livewire:updated', function() {
-            console.log('Livewire updated, reinitializing chart...');
-            setTimeout(() => {
-                initSalesChart();
-            }, 200);
-        });
-
-        // Alternative event listener for older Livewire versions
-        if (typeof Livewire !== 'undefined') {
-            Livewire.on('dashboardDataUpdated', () => {
-                console.log('Dashboard data updated, reinitializing chart...');
-                setTimeout(() => {
-                    initSalesChart();
-                }, 200);
-            });
+        if (typeof Chart === 'undefined') {
+            updateDebug('❌ Chart.js tidak tersedia!');
+            return;
         }
-    </script>
-@endpush
+
+        // Destroy existing chart
+        if (salesChart) {
+            salesChart.destroy();
+        }
+
+        // Sample data for testing
+        const sampleData = {
+            labels: ['1 Okt', '2 Okt', '3 Okt', '4 Okt', '5 Okt', '6 Okt', '7 Okt'],
+            data: [150000, 230000, 180000, 320000, 290000, 410000, 350000]
+        };
+
+        salesChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: sampleData.labels,
+                datasets: [{
+                    label: 'Sample Penjualan (Rp)',
+                    data: sampleData.data,
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#10b981',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 6,
+                    pointHoverRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '📊 Test Line Chart - Sample Data',
+                        font: {
+                            size: 16,
+                            weight: 'bold'
+                        },
+                        color: '#059669'
+                    },
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(17, 24, 39, 0.9)',
+                        titleColor: '#ffffff',
+                        bodyColor: '#ffffff',
+                        borderColor: '#10b981',
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        displayColors: false,
+                        callbacks: {
+                            title: function(context) {
+                                return '📅 ' + context[0].label;
+                            },
+                            label: function(context) {
+                                const value = context.parsed.y;
+                                return '💰 Rp ' + new Intl.NumberFormat('id-ID').format(value);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Tanggal',
+                            color: '#374151'
+                        },
+                        grid: {
+                            color: 'rgba(156, 163, 175, 0.3)'
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Penjualan (Rupiah)',
+                            color: '#374151'
+                        },
+                        grid: {
+                            color: 'rgba(156, 163, 175, 0.3)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                if (value >= 1000000) return 'Rp ' + (value / 1000000).toFixed(1) + 'M';
+                                else if (value >= 1000) return 'Rp ' + (value / 1000).toFixed(0) + 'K';
+                                return 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
+                            }
+                        }
+                    }
+                },
+                animation: {
+                    duration: 1000,
+                    easing: 'easeInOutQuart'
+                }
+            }
+        });
+
+        updateDebug('✅ Test chart berhasil dibuat dengan sample data!');
+    }
+
+    // Fallback initialization
+    setTimeout(() => {
+        if (!salesChart && typeof Chart !== 'undefined') {
+            updateDebug('⏰ Fallback chart initialization');
+            renderChart();
+        }
+    }, 2000);
+</script>

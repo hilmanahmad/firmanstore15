@@ -2,8 +2,8 @@
 
 namespace App\Livewire;
 
-use Log;
 use Livewire\Component;
+use Illuminate\Support\Facades\Log;
 use App\Models\Item;
 use App\Models\Customer;
 use App\Models\Category;
@@ -38,22 +38,35 @@ class Dashboard extends Component
 
         switch ($type) {
             case 'today':
-                $this->startDate = Carbon::today()->format('Y-m-d');
-                $this->endDate = Carbon::today()->format('Y-m-d');
+                $this->startDate = Carbon::today()->toDateString();
+                $this->endDate = Carbon::today()->toDateString();
                 break;
             case '7days':
-                $this->startDate = Carbon::now()->subDays(7)->format('Y-m-d');
-                $this->endDate = Carbon::today()->format('Y-m-d');
+                $this->startDate = Carbon::today()->subDays(6)->toDateString();
+                $this->endDate = Carbon::today()->toDateString();
                 break;
             case '30days':
-                $this->startDate = Carbon::now()->subDays(30)->format('Y-m-d');
-                $this->endDate = Carbon::today()->format('Y-m-d');
+                $this->startDate = Carbon::today()->subDays(29)->toDateString();
+                $this->endDate = Carbon::today()->toDateString();
                 break;
             case 'thismonth':
-                $this->startDate = Carbon::now()->startOfMonth()->format('Y-m-d');
-                $this->endDate = Carbon::now()->endOfMonth()->format('Y-m-d');
+                $this->startDate = Carbon::now()->startOfMonth()->toDateString();
+                $this->endDate = Carbon::now()->endOfMonth()->toDateString();
                 break;
+            default:
+                $this->startDate = Carbon::today()->subDays(29)->toDateString();
+                $this->endDate = Carbon::today()->toDateString();
         }
+
+        // Log untuk debug
+        \Log::info('Filter periode changed:', [
+            'type' => $type,
+            'start_date' => $this->startDate,
+            'end_date' => $this->endDate
+        ]);
+
+        // Emit event untuk refresh chart
+        $this->dispatch('dashboardDataUpdated');
     }
 
     public function getDashboardData()
@@ -140,38 +153,46 @@ class Dashboard extends Component
 
     private function getChartData()
     {
-        $dailySales = Transaction::selectRaw('DATE(created_at) as date, SUM(selling_price) as total')
-            ->whereBetween(DB::raw('DATE(created_at)'), [$this->startDate, $this->endDate])
-            ->groupBy(DB::raw('DATE(created_at)'))
-            ->orderBy('date')
-            ->get();
+        try {
+            // Ambil data penjualan harian dari transaction dengan total yang benar
+            $dailySales = Transaction::selectRaw('DATE(created_at) as date, SUM(selling_price) as total')
+                ->whereBetween(DB::raw('DATE(created_at)'), [$this->startDate, $this->endDate])
+                ->groupBy(DB::raw('DATE(created_at)'))
+                ->orderBy('date')
+                ->get();
 
-        // Debug log
-        \Log::info('Chart Data Query Result:', $dailySales->toArray());
+            // Format data untuk chart
+            $chartData = [
+                'labels' => $dailySales->pluck('date')->map(function ($date) {
+                    return Carbon::parse($date)->format('d M');
+                })->toArray(),
+                'data' => $dailySales->pluck('total')->map(function ($total) {
+                    return (float) ($total ?? 0);
+                })->toArray()
+            ];
+            return $chartData;
+        } catch (\Exception $e) {
+            Log::error('Error generating chart data:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
 
-        // Jika tidak ada data, buat data dummy untuk testing
-        if ($dailySales->isEmpty()) {
+            // Return fallback data
             return [
-                'labels' => ['Hari Ini'],
+                'labels' => ['Error'],
                 'data' => [0]
             ];
         }
-
-        $chartData = [
-            'labels' => $dailySales->pluck('date')->map(function ($date) {
-                return Carbon::parse($date)->format('d M');
-            })->toArray(),
-            'data' => $dailySales->pluck('total')->map(function ($total) {
-                return (float) $total;
-            })->toArray()
-        ];
-        \Log::info('Final Chart Data:', $chartData);
-
-        return $chartData;
     }
 
     public function changeData()
     {
-        $this->dispatch('dashboardDataUpdated', [])->self();
+        \Log::info('Refresh data triggeresd');
+
+        // Force refresh component data
+        $this->mount();
+
+        // Emit event untuk refresh chart
+        $this->dispatch('dashboardDataUpdated');
     }
 }

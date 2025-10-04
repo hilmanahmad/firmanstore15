@@ -96,6 +96,7 @@
                 <div class="row align-items-center">
                     <div class="col-md-8">
                         <h5 class="mb-3">Filter Periode</h5>
+                        <!-- Update bagian filter buttons -->
                         <div class="btn-group" role="group">
                             <button type="button"
                                 class="btn btn-outline-primary {{ $filterType == 'today' ? 'active' : '' }}"
@@ -127,10 +128,6 @@
                     <div class="iq-card-header d-flex justify-content-between">
                         <div class="iq-header-title">
                             <h4 class="card-title">Grafik Penjualan Harian</h4>
-                        </div>
-                        <div>
-                            <button onclick="renderChart()" class="btn btn-sm btn-primary">🔄 Refresh Chart</button>
-                            <button onclick="testChart()" class="btn btn-sm btn-info">🧪 Test Chart</button>
                         </div>
                     </div>
                     <div class="iq-card-body" wire:ignore>
@@ -277,6 +274,8 @@
         try {
             // Get chart data from Laravel
             const chartData = @json($chart_data ?? ['labels' => ['No Data'], 'data' => [0]]);
+            console.log(chartData);
+
             updateDebug('📊 Data chart diterima: ' + JSON.stringify(chartData));
 
             const ctx = document.getElementById('salesChart');
@@ -296,28 +295,41 @@
                 updateDebug('🗑️ Chart sebelumnya dihapus');
             }
 
-            // Create line chart with enhanced styling
+            // Create line chart dengan fresh data
             salesChart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: chartData.labels || ['No Data'],
-                    datasets: [{
-                        label: 'Penjualan Harian (Rp)',
-                        data: chartData.data || [0],
-                        borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.4,
-                        pointBackgroundColor: '#3b82f6',
-                        pointBorderColor: '#ffffff',
-                        pointBorderWidth: 2,
-                        pointRadius: 6,
-                        pointHoverRadius: 8,
-                        pointHoverBackgroundColor: '#1d4ed8',
-                        pointHoverBorderColor: '#ffffff',
-                        pointHoverBorderWidth: 3
-                    }]
+                    datasets: chartData.datasets || [{
+                            label: 'Penjualan Dus',
+                            data: [0],
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#3b82f6',
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 2,
+                            pointRadius: 6,
+                            pointHoverRadius: 8
+                        },
+                        {
+                            label: 'Penjualan Pcs',
+                            data: [0],
+                            borderColor: '#00a023',
+                            backgroundColor: 'rgba(0, 160, 35, 0.1)',
+                            borderWidth: 2,
+                            fill: false,
+                            tension: 0.2,
+                            pointBackgroundColor: '#00a023',
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            borderDash: [5, 5]
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
@@ -329,7 +341,7 @@
                     plugins: {
                         title: {
                             display: true,
-                            text: 'Trend Penjualan Harian',
+                            text: 'Perbandingan Penjualan Dus vs Pcs',
                             font: {
                                 size: 18,
                                 weight: 'bold',
@@ -351,7 +363,8 @@
                                 },
                                 color: '#374151',
                                 usePointStyle: true,
-                                pointStyle: 'circle'
+                                pointStyle: 'circle',
+                                padding: 20
                             }
                         },
                         tooltip: {
@@ -361,7 +374,7 @@
                             borderColor: '#3b82f6',
                             borderWidth: 2,
                             cornerRadius: 8,
-                            displayColors: false,
+                            displayColors: true,
                             titleFont: {
                                 size: 14,
                                 weight: 'bold'
@@ -371,12 +384,44 @@
                             },
                             callbacks: {
                                 title: function(context) {
-                                    return '📅 Tanggal: ' + context[0].label;
+                                    const labelIndex = context[0].dataIndex;
+                                    const dateLabel = chartData.labels[labelIndex] || context[0].label;
+                                    return '📅 Tanggal: ' + dateLabel;
                                 },
                                 label: function(context) {
                                     const value = context.parsed.y ?? 0;
-                                    return '💰 Penjualan: Rp ' + new Intl.NumberFormat('id-ID').format(
-                                        value);
+                                    const datasetLabel = context.dataset.label;
+
+                                    let icon = '💰';
+                                    if (datasetLabel.includes('Dus')) {
+                                        icon = '📦';
+                                    } else if (datasetLabel.includes('Pcs')) {
+                                        icon = '🔢';
+                                    }
+
+                                    return icon + ' ' + datasetLabel + ': Rp ' +
+                                        new Intl.NumberFormat('id-ID').format(value);
+                                },
+                                afterBody: function(context) {
+                                    // Hitung total dan persentase
+                                    if (context.length >= 2) {
+                                        const dus = context[0].parsed.y || 0;
+                                        const pcs = context[1].parsed.y || 0;
+                                        const total = dus + pcs;
+
+                                        if (total > 0) {
+                                            const dusPercent = ((dus / total) * 100).toFixed(1);
+                                            const pcsPercent = ((pcs / total) * 100).toFixed(1);
+
+                                            return [
+                                                '',
+                                                `📊 Total: Rp ${new Intl.NumberFormat('id-ID').format(total)}`,
+                                                `📦 Dus: ${dusPercent}%`,
+                                                `🔢 Pcs: ${pcsPercent}%`
+                                            ];
+                                        }
+                                    }
+                                    return '';
                                 }
                             }
                         }
@@ -453,161 +498,117 @@
                 }
             });
 
-            updateDebug('✅ Line chart berhasil dibuat! (' + (chartData.labels?.length || 0) + ' data points)');
+            const datasetCount = chartData.datasets?.length || 0;
+            const pointCount = chartData.labels?.length || 0;
+            updateDebug(`✅ Chart berhasil dibuat! ${datasetCount} datasets, ${pointCount} data points`);
 
         } catch (error) {
-            updateDebug('❌ Error saat membuat chart: ' + error.message);
+            updateDebug('❌ Error: ' + error.message);
             console.error('Chart creation error:', error);
         }
     }
 
-    // Initialize chart on different events
+    // Event Listeners untuk Auto-Update Chart Data
+
+    // 1. Initial load
     document.addEventListener('DOMContentLoaded', function() {
-        updateDebug('🚀 DOM ready - akan render chart...');
-        setTimeout(renderChart, 300);
-    });
-
-    document.addEventListener('livewire:navigated', function() {
-        updateDebug('📍 Livewire navigated');
-        setTimeout(renderChart, 400);
-    });
-
-    document.addEventListener('livewire:updated', function() {
-        updateDebug('🔄 Livewire updated - refresh chart');
+        updateDebug('🚀 DOM ready - initializing chart...');
         setTimeout(renderChart, 500);
     });
 
-    // Listen for Livewire events
+    // 2. Livewire updated (saat component di-refresh)
+    document.addEventListener('livewire:updated', function() {
+        updateDebug('🔄 Livewire updated - refreshing chart with fresh data...');
+        setTimeout(renderChart, 300);
+    });
+
+    // 3. Custom Livewire events
     if (typeof Livewire !== 'undefined') {
-        Livewire.on('dashboardDataUpdated', () => {
-            updateDebug('📊 Dashboard data updated');
+        // Event saat chart data di-update
+        Livewire.on('chartDataUpdated', () => {
+            updateDebug('📈 Chart data updated event - getting fresh data...');
+            setTimeout(renderChart, 200);
+        });
+
+        // Event saat filter berubah
+        Livewire.on('filterChanged', (filterName) => {
+            updateDebug(`🔍 Filter changed to: ${filterName} - updating chart...`);
             setTimeout(renderChart, 300);
         });
     }
 
-    // Test chart function with sample data
+    // Manual refresh function
+    window.refreshChart = function() {
+        updateDebug('🔄 Manual refresh triggered...');
+        renderChart();
+    }
+
+    // Test chart function
     function testChart() {
-        updateDebug('🧪 Membuat test chart dengan data sample...');
+        updateDebug('🧪 Creating test chart with sample data...');
 
         const ctx = document.getElementById('salesChart');
-        if (!ctx) {
-            updateDebug('❌ Canvas element tidak ditemukan!');
+        if (!ctx || typeof Chart === 'undefined') {
+            updateDebug('❌ Canvas atau Chart.js tidak tersedia!');
             return;
         }
 
-        if (typeof Chart === 'undefined') {
-            updateDebug('❌ Chart.js tidak tersedia!');
-            return;
-        }
-
-        // Destroy existing chart
         if (salesChart) {
             salesChart.destroy();
         }
 
-        // Sample data for testing
-        const sampleData = {
-            labels: ['1 Okt', '2 Okt', '3 Okt', '4 Okt', '5 Okt', '6 Okt', '7 Okt'],
-            data: [150000, 230000, 180000, 320000, 290000, 410000, 350000]
-        };
-
         salesChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: sampleData.labels,
+                labels: ['1 Okt', '2 Okt', '3 Okt', '4 Okt', '5 Okt'],
                 datasets: [{
-                    label: 'Sample Penjualan (Rp)',
-                    data: sampleData.data,
-                    borderColor: '#10b981',
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                    borderWidth: 3,
-                    fill: true,
-                    tension: 0.4,
-                    pointBackgroundColor: '#10b981',
-                    pointBorderColor: '#ffffff',
-                    pointBorderWidth: 2,
-                    pointRadius: 6,
-                    pointHoverRadius: 8
-                }]
+                        label: 'Sample Dus',
+                        data: [150000, 230000, 180000, 320000, 290000],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Sample Pcs',
+                        data: [200000, 150000, 250000, 180000, 220000],
+                        borderColor: '#00a023',
+                        backgroundColor: 'rgba(0, 160, 35, 0.1)',
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.2,
+                        borderDash: [5, 5]
+                    }
+                ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                interaction: {
-                    mode: 'index',
-                    intersect: false
-                },
                 plugins: {
                     title: {
                         display: true,
-                        text: '📊 Test Line Chart - Sample Data',
+                        text: '🧪 Test Chart - Sample Data',
                         font: {
                             size: 16,
                             weight: 'bold'
-                        },
-                        color: '#059669'
-                    },
-                    legend: {
-                        display: true,
-                        position: 'top'
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(17, 24, 39, 0.9)',
-                        titleColor: '#ffffff',
-                        bodyColor: '#ffffff',
-                        borderColor: '#10b981',
-                        borderWidth: 1,
-                        cornerRadius: 8,
-                        displayColors: false,
-                        callbacks: {
-                            title: function(context) {
-                                return '📅 ' + context[0].label;
-                            },
-                            label: function(context) {
-                                const value = context.parsed.y;
-                                return '💰 Rp ' + new Intl.NumberFormat('id-ID').format(value);
-                            }
                         }
                     }
                 },
                 scales: {
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Tanggal',
-                            color: '#374151'
-                        },
-                        grid: {
-                            color: 'rgba(156, 163, 175, 0.3)'
-                        }
-                    },
                     y: {
                         beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Penjualan (Rupiah)',
-                            color: '#374151'
-                        },
-                        grid: {
-                            color: 'rgba(156, 163, 175, 0.3)'
-                        },
                         ticks: {
                             callback: function(value) {
-                                if (value >= 1000000) return 'Rp ' + (value / 1000000).toFixed(1) + 'M';
-                                else if (value >= 1000) return 'Rp ' + (value / 1000).toFixed(0) + 'K';
                                 return 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
                             }
                         }
                     }
-                },
-                animation: {
-                    duration: 1000,
-                    easing: 'easeInOutQuart'
                 }
             }
         });
 
-        updateDebug('✅ Test chart berhasil dibuat dengan sample data!');
+        updateDebug('✅ Test chart berhasil dibuat!');
     }
 
     // Fallback initialization
@@ -616,5 +617,5 @@
             updateDebug('⏰ Fallback chart initialization');
             renderChart();
         }
-    }, 2000);
+    }, 3000);
 </script>

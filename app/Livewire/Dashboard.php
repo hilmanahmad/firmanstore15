@@ -183,8 +183,6 @@ class Dashboard extends Component
     private function getChartData()
     {
         try {
-            $this->startDate = Carbon::today()->subDays(29)->toDateString();
-            $this->endDate = Carbon::today()->toDateString();
             // Ambil data penjualan harian dari transaction dengan total yang benar
             $dailySales = Transaction::selectRaw('DATE(created_at) as date, SUM(selling_price * qty) as total, type_id')
                 ->whereBetween(DB::raw('DATE(created_at)'), [$this->startDate, $this->endDate])
@@ -193,12 +191,12 @@ class Dashboard extends Component
                 ->get();
 
             // Buat range tanggal lengkap untuk memastikan semua tanggal ada
-            $startDate = Carbon::parse($this->startDate);
-            $endDate = Carbon::parse($this->endDate);
+            $startDate = Carbon::today()->subDays(29)->toDateString();
+            $endDate = Carbon::today()->toDateString();
             $dateRange = [];
-            $current = $startDate->copy();
+            $current = Carbon::parse($startDate);
 
-            while ($current <= $endDate) {
+            while ($current <= Carbon::parse($endDate)) {
                 $dateRange[] = $current->format('Y-m-d');
                 $current->addDay();
             }

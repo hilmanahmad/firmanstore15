@@ -67,7 +67,6 @@ class TransactionService
         // Generate atau gunakan no_trans existing
 
         $code_month = StringHelper::code_month('transactions', 'no_trans', 1, 4);
-        dd($code_month);
         foreach ($request->items as $itemArray) {
             $itemQuery = ItemHistory::where([
                 'item_id' => $itemArray['item_id'],

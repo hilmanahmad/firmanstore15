@@ -52,7 +52,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('item-history-datatable', [ItemHistoryController::class, 'datatable'])->name('itemhistorydatatable');
     Route::resource('transaction', TransactionController::class);
     Route::get('transaction-datatable', [TransactionController::class, 'datatable'])->name('transactiondatatable');
-
+    Route::get('transaction-detail/{id}', [TransactionController::class, 'getDetail'])->name('transaction.detail');
     Route::prefix('report')->name('report.')->group(function () {
         Route::get('transaction', [ReportController::class, 'index'])->name('transaction');
     });

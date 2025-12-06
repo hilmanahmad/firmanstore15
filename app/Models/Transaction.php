@@ -13,12 +13,18 @@ class Transaction extends Model
     protected $keyType = 'string';
     protected $fillable = [
         'id',
+        'no_trans',
         'customer_id',
         'item_id',
         'type_id',
         'qty',
         'selling_price',
     ];
+
+    public function transaction()
+    {
+        return $this->hasMany(Transaction::class, 'no_trans', 'no_trans');
+    }
 
     public function customer()
     {

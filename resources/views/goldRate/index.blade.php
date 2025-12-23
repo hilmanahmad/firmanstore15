@@ -11,6 +11,9 @@
                             </h4>
                         </div>
                         <div class="iq-card-header-toolbar d-flex align-items-center">
+                            <span class="badge badge-info mr-2">
+                                <i class="fa fa-hourglass-half mr-1"></i>Next: <span id="countdown">-</span>
+                            </span>
                             <span class="badge badge-secondary" id="last-update">-</span>
                             <button class="btn btn-sm btn-outline-primary ml-2" onclick="fetchGoldRate()"
                                 title="Refresh">
@@ -151,50 +154,43 @@
 <script type="text/javascript">
     let rateHistory = [];
     let checkInterval = null;
-    let lastFetchMinute = -1; // Track menit terakhir fetch
+    let lastFetchMinute = -1;
+    const TARGET_SECOND = 3; // Update di detik ke-3
 
     $(function() {
-        // Cek apakah sekarang sudah detik 01, jika ya langsung fetch
-        const now = new Date();
-        if (now.getSeconds() === 1) {
-            fetchGoldRate();
-            lastFetchMinute = now.getMinutes();
-        } else {
-            // Fetch pertama kali
-            fetchGoldRate();
-            lastFetchMinute = now.getMinutes();
-        }
+        // Fetch pertama kali
+        fetchGoldRate();
 
-        // Set interval setiap 1 detik untuk cek waktu
-        checkInterval = setInterval(checkTimeAndFetch, 1000);
+        // Cek setiap 500ms apakah sudah waktunya fetch (detik ke-3 setiap menit)
+        checkInterval = setInterval(checkAndFetch, 500);
     });
 
-    function checkTimeAndFetch() {
+    function checkAndFetch() {
         const now = new Date();
         const currentSecond = now.getSeconds();
         const currentMinute = now.getMinutes();
 
-        // Hitung countdown sampai detik 01 berikutnya
-        let secondsUntilNext;
-        if (currentSecond === 0) {
-            secondsUntilNext = 1;
-        } else if (currentSecond === 1) {
-            secondsUntilNext = 60;
-        } else {
-            secondsUntilNext = 60 - currentSecond + 1;
-        }
-
-        $('#countdown-timer').text(secondsUntilNext + 's');
-
-        // Update progress bar
-        const progress = ((60 - secondsUntilNext) / 60) * 100;
-        $('#countdown-progress').css('width', progress + '%');
-
-        // Fetch data saat detik = 01 dan belum fetch di menit ini
-        if (currentSecond === 1 && currentMinute !== lastFetchMinute) {
-            fetchGoldRate();
+        // Jika detik ke-3 dan belum fetch di menit ini
+        if (currentSecond === TARGET_SECOND && currentMinute !== lastFetchMinute) {
             lastFetchMinute = currentMinute;
+            fetchGoldRate();
         }
+
+        // Update countdown display
+        updateCountdown(now);
+    }
+
+    function updateCountdown(now) {
+        const currentSecond = now.getSeconds();
+        let secondsUntilNext;
+
+        if (currentSecond < TARGET_SECOND) {
+            secondsUntilNext = TARGET_SECOND - currentSecond;
+        } else {
+            secondsUntilNext = (60 - currentSecond) + TARGET_SECOND;
+        }
+
+        $('#countdown').text(secondsUntilNext + ' detik');
     }
 
     function fetchGoldRate() {

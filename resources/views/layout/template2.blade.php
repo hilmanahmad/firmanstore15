@@ -65,10 +65,6 @@
         <!-- Page Content  -->
         @yield('container')
     </div>
-    <!-- Wrapper END -->
-    <!-- Footer -->
-    @include('layout.content')
-    <!-- Footer END -->
 
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->

@@ -17,7 +17,7 @@
                             <span class="badge badge-secondary" id="last-update">-</span>
                             <button class="btn btn-sm btn-outline-primary ml-2" onclick="fetchGoldRate()"
                                 title="Refresh">
-                                <i class="fa fa-sync-alt" id="refresh-icon"></i>
+                                <i class="fa fa-refresh" id="refresh-icon"></i>
                             </button>
                         </div>
                     </div>
@@ -55,7 +55,7 @@
                                 </div>
                             </div>
                         </div>
-
+                        {{-- 
                         <!-- Spread Info -->
                         <div class="row">
                             <div class="col-12">
@@ -71,7 +71,7 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </div> --}}
 
                         <!-- Rate History -->
                         <div class="row mt-3">

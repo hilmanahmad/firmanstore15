@@ -14,6 +14,9 @@
 <link rel="stylesheet" type="text/css" href="{{ asset('assets') }}/js/easyui/themes/icon.css">
 <link href="{{ asset('assets') }}/sweetalert/sweetalert2.min.css" rel="stylesheet">
 <link rel="stylesheet" href="{{ asset('assets') }}/css/myCss/app.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/2.3.5/css/dataTables.dataTables.css" />
+
+<script src="https://cdn.datatables.net/2.3.5/js/dataTables.js"></script>
 <style>
     #map {
         height: 500px;

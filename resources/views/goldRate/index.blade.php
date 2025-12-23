@@ -55,23 +55,6 @@
                                 </div>
                             </div>
                         </div>
-                        {{-- 
-                        <!-- Spread Info -->
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="alert alert-info d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <i class="fa fa-info-circle mr-2"></i>
-                                        <strong>Spread:</strong> <span id="spread-amount">-</span>
-                                    </div>
-                                    <div>
-                                        <small class="text-muted">
-                                            <i class="fa fa-clock mr-1"></i> Auto refresh setiap 1 menit
-                                        </small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div> --}}
 
                         <!-- Rate History -->
                         <div class="row mt-3">
@@ -97,6 +80,33 @@
                                             </tr>
                                         </tbody>
                                     </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Spread Info -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="tradingview-widget-container">
+                                    <div id="tradingview_xauusd"></div>
+                                    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+                                    <script type="text/javascript">
+                                        new TradingView.widget({
+                                            "width": "100%",
+                                            "height": 480,
+                                            "symbol": "OANDA:XAUUSD",
+                                            "interval": "1",
+                                            "timezone": "Asia/Jakarta",
+                                            "theme": "light",
+                                            "style": "1",
+                                            "locale": "id",
+                                            "toolbar_bg": "#f1f3f6",
+                                            "enable_publishing": false,
+                                            "hide_legend": false,
+                                            "save_image": false,
+                                            "container_id": "tradingview_xauusd"
+                                        });
+                                    </script>
                                 </div>
                             </div>
                         </div>
@@ -267,7 +277,7 @@
                     <tr>
                         <td class="text-center">${index + 1}</td>
                         <td class="text-center">${formatDateTime(item.time)}</td>
-                        <td class="text-right text-success font-weight-bold">${formatCurrency(item.buying_rate)}</td>
+                        <td class="text-right font-weight-bold">${formatCurrency(item.buying_rate)}</td>
                         <td class="text-right text-danger font-weight-bold">${formatCurrency(item.selling_rate)}</td>
                         <td class="text-right">${formatCurrency(estCuan20JT)}</td>
                         <td class="text-right">${formatCurrency(estCuan30JT)}</td>

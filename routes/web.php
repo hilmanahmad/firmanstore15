@@ -10,8 +10,10 @@ use App\Http\Controllers\TypeController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\GoldRateController; // Tambahkan ini
 use App\Http\Controllers\ItemHistoryController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\ItemPurchaseController;
 use App\Http\Controllers\Administrator\MenuController;
 use App\Http\Controllers\Administrator\UserController;
 
@@ -51,9 +53,16 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('item-history', ItemHistoryController::class);
     Route::get('item-history-datatable', [ItemHistoryController::class, 'datatable'])->name('itemhistorydatatable');
     Route::resource('transaction', TransactionController::class);
+    Route::resource('item-purchase', ItemPurchaseController::class);
+    Route::get('item-purchase-datatable', [ItemPurchaseController::class, 'datatable'])->name('itempurchasedatatable');
+    Route::post('item-purchase/confirm-received', [ItemPurchaseController::class, 'confirmReceived'])->name('item-purchase.confirm');
     Route::get('transaction-datatable', [TransactionController::class, 'datatable'])->name('transactiondatatable');
     Route::get('transaction-detail/{id}', [TransactionController::class, 'getDetail'])->name('transaction.detail');
     Route::prefix('report')->name('report.')->group(function () {
         Route::get('transaction', [ReportController::class, 'index'])->name('transaction');
     });
+
+    // Gold Rate
 });
+Route::get('gold-rate', [GoldRateController::class, 'index'])->name('gold-rate');
+Route::get('gold-rate/fetch', [GoldRateController::class, 'getRate'])->name('gold-rate.fetch');

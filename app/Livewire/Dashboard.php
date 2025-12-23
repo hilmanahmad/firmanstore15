@@ -35,7 +35,7 @@ class Dashboard extends Component
         // Pastikan chart_data di-pass ke view
         $data['chart_data'] = $this->chart_data;
 
-        \Log::info('Render called - Chart data updated:', [
+        Log::info('Render called - Chart data updated:', [
             'start_date' => $this->startDate,
             'end_date' => $this->endDate,
             'chart_labels_count' => count($this->chart_data['labels'] ?? []),
@@ -79,7 +79,7 @@ class Dashboard extends Component
                 $filterName = '7 Hari Terakhir';
         }
 
-        \Log::info('Filter periode changed:', [
+        Log::info('Filter periode changed:', [
             'type' => $type,
             'filter_name' => $filterName,
             'start_date' => $this->startDate,
@@ -265,7 +265,7 @@ class Dashboard extends Component
             ];
 
             // Log untuk debugging
-            \Log::info('Chart Data Debug:', [
+            Log::info('Chart Data Debug:', [
                 'date_range' => $dateRange,
                 'labels_count' => count($labels),
                 'data1_count' => count($data1),
@@ -278,13 +278,13 @@ class Dashboard extends Component
 
             // Verifikasi jumlah array sama
             if (count($labels) === count($data1) && count($labels) === count($data2)) {
-                \Log::info('✅ Array counts match:', [
+                Log::info('✅ Array counts match:', [
                     'labels' => count($labels),
                     'data1' => count($data1),
                     'data2' => count($data2)
                 ]);
             } else {
-                \Log::warning('❌ Array counts do not match:', [
+                Log::warning('❌ Array counts do not match:', [
                     'labels' => count($labels),
                     'data1' => count($data1),
                     'data2' => count($data2)
@@ -321,7 +321,7 @@ class Dashboard extends Component
 
     public function changeData()
     {
-        \Log::info('Manual data refresh triggered');
+        Log::info('Manual data refresh triggered');
 
         // Force refresh component - JANGAN panggil mount()!
         // $this->mount(); ← HAPUS INI, akan reset filterType
@@ -337,7 +337,7 @@ class Dashboard extends Component
     // Method baru untuk refresh chart
     public function refreshChart()
     {
-        \Log::info('Chart refresh triggered manually');
+        Log::info('Chart refresh triggered manually');
 
         // Refresh chart data
         $this->refreshChartData();
@@ -348,14 +348,14 @@ class Dashboard extends Component
 
     public function refreshChartData()
     {
-        \Log::info('Refreshing chart data...', [
+        Log::info('Refreshing chart data...', [
             'current_dates' => [$this->startDate, $this->endDate]
         ]);
 
         // Update property chart_data
         $this->chart_data = $this->getChartData();
 
-        \Log::info('Chart data refreshed:', [
+        Log::info('Chart data refreshed:', [
             'labels_count' => count($this->chart_data['labels'] ?? []),
             'datasets_count' => count($this->chart_data['datasets'] ?? []),
             'first_dataset_data_count' => count($this->chart_data['datasets'][0]['data'] ?? [])

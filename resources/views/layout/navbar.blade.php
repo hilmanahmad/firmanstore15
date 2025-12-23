@@ -29,7 +29,7 @@
                         <img src="../assets/images/user/1.jpg" class="img-fluid rounded mr-3" alt="user">
                         <div class="caption">
                             <h6 class="mb-0 line-height">
-                                {{ auth()->user()->name }}
+                                {{ isset(auth()->user()->name) ? auth()->user()->name : 'Guest' }}
                             </h6>
                         </div>
                     </a>
@@ -37,7 +37,8 @@
                         <div class="iq-card shadow-none m-0">
                             <div class="iq-card-body p-0 ">
                                 <div class="bg-primary p-3">
-                                    <h5 class="mb-0 text-white line-height">Hello {{ auth()->user()->name }}</h5>
+                                    <h5 class="mb-0 text-white line-height">Hello
+                                        {{ isset(auth()->user()->name) ? auth()->user()->name : 'Guest' }}</h5>
 
                                 </div>
                                 <div class="d-inline-block w-100 text-center p-3">

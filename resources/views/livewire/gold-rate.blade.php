@@ -12,7 +12,7 @@
                             </div>
                             <div class="iq-card-header-toolbar d-flex align-items-center">
                                 <div class="custom-control custom-switch mr-3" title="Notifikasi Suara">
-                                    <input type="checkbox" class="custom-control-input" id="soundToggle" checked>
+                                    <input type="checkbox" class="custom-control-input" id="soundToggle">
                                     <label class="custom-control-label" for="soundToggle">
                                         <i class="fa fa-bell" id="soundIcon"></i>
                                     </label>
@@ -36,7 +36,7 @@
                                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                                     <i class="fa fa-exclamation-triangle mr-2"></i>{{ $error }}
                                     <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                        <span aria-hidden="false">&times;</span>
+                                        <span aria-hidden="true">&times;</span>
                                     </button>
                                 </div>
                             @endif

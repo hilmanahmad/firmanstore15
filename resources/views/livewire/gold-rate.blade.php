@@ -312,7 +312,7 @@
                 });
             }
 
-            // Create audio context for notification sound
+            // Create voice notification "yuk konfirm"
             function playDringSound() {
                 // Double check if sound is enabled before playing
                 if (!isSoundEnabled()) {
@@ -321,49 +321,39 @@
                 }
 
                 try {
-                    const audioContext = new(window.AudioContext || window.webkitAudioContext)();
+                    // Use Web Speech API for Text-to-Speech
+                    if ('speechSynthesis' in window) {
+                        const utterance = new SpeechSynthesisUtterance('yuk konfirm');
+                        utterance.lang = 'id-ID'; // Bahasa Indonesia
+                        utterance.rate = 1.0; // Kecepatan normal
+                        utterance.pitch = 1.2; // Sedikit lebih tinggi
+                        utterance.volume = 1.0; // Volume penuh
 
-                    // Create oscillator for "dring" sound
-                    const oscillator = audioContext.createOscillator();
-                    const gainNode = audioContext.createGain();
+                        window.speechSynthesis.speak(utterance);
+                        console.log('Playing voice: yuk konfirm');
+                    } else {
+                        // Fallback ke bell sound jika speech synthesis tidak didukung
+                        console.log('Speech synthesis not supported, using fallback bell sound');
+                        const audioContext = new(window.AudioContext || window.webkitAudioContext)();
+                        const oscillator = audioContext.createOscillator();
+                        const gainNode = audioContext.createGain();
 
-                    oscillator.connect(gainNode);
-                    gainNode.connect(audioContext.destination);
+                        oscillator.connect(gainNode);
+                        gainNode.connect(audioContext.destination);
 
-                    // Bell-like sound
-                    oscillator.frequency.setValueAtTime(830, audioContext.currentTime); // High pitch
-                    oscillator.type = 'sine';
+                        oscillator.frequency.setValueAtTime(830, audioContext.currentTime);
+                        oscillator.type = 'sine';
 
-                    // Volume envelope
-                    gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                        gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
 
-                    oscillator.start(audioContext.currentTime);
-                    oscillator.stop(audioContext.currentTime + 0.5);
-
-                    // Second ding (double ring effect)
-                    setTimeout(() => {
-                        const osc2 = audioContext.createOscillator();
-                        const gain2 = audioContext.createGain();
-
-                        osc2.connect(gain2);
-                        gain2.connect(audioContext.destination);
-
-                        osc2.frequency.setValueAtTime(1046, audioContext.currentTime);
-                        osc2.type = 'sine';
-
-                        gain2.gain.setValueAtTime(0.4, audioContext.currentTime);
-                        gain2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
-
-                        osc2.start(audioContext.currentTime);
-                        osc2.stop(audioContext.currentTime + 0.4);
-                    }, 150);
+                        oscillator.start(audioContext.currentTime);
+                        oscillator.stop(audioContext.currentTime + 0.5);
+                    }
                 } catch (e) {
                     console.log('Audio not supported:', e);
                 }
-            }
-
-            // Initialize TradingView Widget
+            } // Initialize TradingView Widget
             if (typeof TradingView !== 'undefined') {
                 new TradingView.widget({
                     "width": "100%",

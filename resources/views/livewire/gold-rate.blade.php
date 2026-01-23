@@ -321,37 +321,44 @@
                 }
 
                 try {
-                    // Use Web Speech API for Text-to-Speech
-                    if ('speechSynthesis' in window) {
-                        const utterance = new SpeechSynthesisUtterance('yuk konfirm');
-                        utterance.lang = 'id-ID'; // Bahasa Indonesia
-                        utterance.rate = 1.0; // Kecepatan normal
-                        utterance.pitch = 1.2; // Sedikit lebih tinggi
-                        utterance.volume = 2.0; // Volume penuh
+                    // Method 1: Try HTML5 Audio with base64 encoded beep sound (most reliable)
+                    const audio = new Audio();
+                    // Simple notification beep sound (data URI)
+                    audio.src =
+                        'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIGGS86+mjVhQKTKXh67hYFAgzjddqoZEMFEum5u2mUxELOoPK6sV2FgozmNDkw3MdBiV/wvDdjkAMDlmu4+yrWBEGLInZ8c1yIwUledPw2YM6CAo9jcnqxXITBi+F1PLSfC4GJnrC8OCNPwwOV7Hk7KtYEQQuhtbxzXQjBSR1z/DdhzkHCj+JyurHcxQHL4HM7t15KwYncrnl7qVSEgQvhtTyz3sjBCJzu+zkqVEOCy+ByvHWfy0FI3fB8N+OQwwPWrDp7a1bEgYufMfsw3IdBSp5vfDakz8MCz6Kx+rGchUFMYbU8sx4KgUods3v24Y3Bwo+jMjrx3MVBSuAy+/XgSsGKHi98N+LQAoJVK7m7a5cEwUneb7q05pBDAk+i8jrx3MVBCiBzO7WeS0FJXa88NuBOQgKQJDJ68d0FAQrhszv1YEvBih3vPDfi0EKDFex5u2vXhQHLoPO89CHNwYle7/p0ptEDgpBjcnqxnMUBCuBye/WgCwGJ3i88OGMPgsLV67n7q9eFAgti8zw2YQ5CAo+jMfqxHIVBSyBzu7TeywGJ3e58N+KQQsKVK/m7bJgEgcuf8nv1Ik6BwpAkMjpxHIVBCx+yO/VgywGKHi98N+KQQsKVK/m7bJgEgcuf8nv1Ik6BwpAkMjpxHIVBCx+yO/VgywGKHi98N+KQQsKVK/m7bJgEgcuf8nv1Ik6BwpAkMjpxHIVBCx+yO/VgywGKHi98N+KQQsKVK/m7bJgEgcuf8nv1Ik6BwpAkMjpxHIVBCx+yO/VgywGKHi98N+KQQsKVK/m7bJgEgcuf8nv1Ik6BwpAkMjpxHIVBCx+yO/VgywGKHi98N+KQQsKVK/m7bJgEg==';
+                    audio.volume = 0.7;
 
-                        window.speechSynthesis.speak(utterance);
-                        console.log('Playing voice: yuk konfirm');
-                    } else {
-                        // Fallback ke bell sound jika speech synthesis tidak didukung
-                        console.log('Speech synthesis not supported, using fallback bell sound');
-                        const audioContext = new(window.AudioContext || window.webkitAudioContext)();
-                        const oscillator = audioContext.createOscillator();
-                        const gainNode = audioContext.createGain();
-
-                        oscillator.connect(gainNode);
-                        gainNode.connect(audioContext.destination);
-
-                        oscillator.frequency.setValueAtTime(830, audioContext.currentTime);
-                        oscillator.type = 'sine';
-
-                        gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
-                        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-
-                        oscillator.start(audioContext.currentTime);
-                        oscillator.stop(audioContext.currentTime + 0.5);
+                    const playPromise = audio.play();
+                    if (playPromise !== undefined) {
+                        playPromise.then(() => {
+                            console.log('Audio beep played successfully');
+                        }).catch(e => {
+                            console.log('Audio beep failed:', e);
+                        });
                     }
+
+                    // Also try speech synthesis after beep
+                    setTimeout(() => {
+                        if ('speechSynthesis' in window) {
+                            // Cancel any ongoing speech
+                            window.speechSynthesis.cancel();
+
+                            const utterance = new SpeechSynthesisUtterance('yuk konfirm');
+                            utterance.lang = 'id-ID';
+                            utterance.rate = 1.0;
+                            utterance.pitch = 1.2;
+                            utterance.volume = 1.0;
+
+                            utterance.onstart = () => console.log('Speech started');
+                            utterance.onerror = (e) => console.log('Speech error:', e);
+                            utterance.onend = () => console.log('Speech ended');
+
+                            window.speechSynthesis.speak(utterance);
+                        }
+                    }, 300);
+
                 } catch (e) {
-                    console.log('Audio not supported:', e);
+                    console.log('Audio error:', e);
                 }
             } // Initialize TradingView Widget
             if (typeof TradingView !== 'undefined') {

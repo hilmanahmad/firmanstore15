@@ -327,7 +327,7 @@
                         utterance.lang = 'id-ID'; // Bahasa Indonesia
                         utterance.rate = 1.0; // Kecepatan normal
                         utterance.pitch = 1.2; // Sedikit lebih tinggi
-                        utterance.volume = 1.0; // Volume penuh
+                        utterance.volume = 2.0; // Volume penuh
 
                         window.speechSynthesis.speak(utterance);
                         console.log('Playing voice: yuk konfirm');

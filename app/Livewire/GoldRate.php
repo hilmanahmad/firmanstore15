@@ -48,6 +48,9 @@ class GoldRate extends Component
                     // Add to history
                     $this->addToHistory();
 
+                    // Dispatch event untuk flash cards
+                    $this->dispatch('rateUpdated');
+
                     $this->isLoading = false;
                     return;
                 }

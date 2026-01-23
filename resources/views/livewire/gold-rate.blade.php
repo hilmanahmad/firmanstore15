@@ -11,14 +11,19 @@
                                 </h4>
                             </div>
                             <div class="iq-card-header-toolbar d-flex align-items-center">
+                                <button class="btn btn-sm btn-outline-warning mr-2" id="notifPermBtn"
+                                    onclick="requestNotificationPermission()" title="Aktifkan Notifikasi Browser">
+                                    <i class="fa fa-bell-o" id="notifPermIcon"></i>
+                                </button>
                                 <div class="custom-control custom-switch mr-3" title="Notifikasi Suara">
                                     <input type="checkbox" class="custom-control-input" id="soundToggle">
                                     <label class="custom-control-label" for="soundToggle">
-                                        <i class="fa fa-bell" id="soundIcon"></i>
+                                        <i class="fa fa-volume-up" id="soundIcon"></i>
                                     </label>
                                 </div>
-                                <span class="badge badge-info mr-2">
-                                    <i class="fa fa-hourglass-half mr-1"></i>Next: <span id="countdown">-</span>
+                                <span class="badge badge-info mr-2 countdown-badge" id="countdownBadge">
+                                    <i class="fa fa-hourglass-half mr-1 hourglass-spin"></i>Next: <span
+                                        id="countdown">-</span>
                                 </span>
                                 <span class="badge badge-secondary">
                                     <i class="fa fa-clock mr-1"></i>{{ $lastUpdate }}
@@ -270,6 +275,77 @@
                 transform: rotate(360deg);
             }
         }
+
+        /* Countdown animations */
+        .countdown-badge {
+            transition: all 0.3s ease;
+        }
+
+        .countdown-badge.alert-mode {
+            background: linear-gradient(45deg, #f39c12, #e74c3c) !important;
+            animation: pulse-alert 0.5s ease-in-out infinite;
+            transform: scale(1.1);
+        }
+
+        @keyframes pulse-alert {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1.1);
+            }
+
+            50% {
+                opacity: 0.8;
+                transform: scale(1.15);
+            }
+        }
+
+        .hourglass-spin {
+            display: inline-block;
+            animation: hourglass-rotate 2s ease-in-out infinite;
+        }
+
+        @keyframes hourglass-rotate {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            50% {
+                transform: rotate(180deg);
+            }
+
+            100% {
+                transform: rotate(180deg);
+            }
+        }
+
+        /* Flash animation for cards when update */
+        .flash-update {
+            animation: flash-border 1s ease-out;
+        }
+
+        @keyframes flash-border {
+            0% {
+                box-shadow: 0 0 20px 5px rgba(255, 193, 7, 0.8);
+            }
+
+            100% {
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            }
+        }
+
+        /* Notification permission button */
+        #notifPermBtn.granted {
+            background-color: #28a745 !important;
+            border-color: #28a745 !important;
+            color: white !important;
+        }
+
+        /* Title flash for background notification */
+        .title-flash {
+            animation: title-blink 1s ease-in-out infinite;
+        }
     </style>
 
     @script
@@ -278,6 +354,111 @@
             const ALERT_SECONDS = 10; // Bunyi dring saat 10 detik sebelum refresh
             let lastFetchMinute = -1;
             let hasPlayedAlert = false;
+            let originalTitle = document.title;
+            let titleFlashInterval = null;
+
+            // Request notification permission
+            window.requestNotificationPermission = function() {
+                if ('Notification' in window) {
+                    Notification.requestPermission().then(permission => {
+                        updateNotifPermButton();
+                        if (permission === 'granted') {
+                            // Test notification
+                            new Notification('🔔 Notifikasi Aktif!', {
+                                body: 'Anda akan menerima notifikasi 10 detik sebelum update harga emas.',
+                                icon: '{{ asset('assets/images/logo.png') }}',
+                                tag: 'gold-rate-test'
+                            });
+                        }
+                    });
+                } else {
+                    alert('Browser tidak mendukung notifikasi');
+                }
+            }
+
+            // Update notification permission button
+            function updateNotifPermButton() {
+                const btn = document.getElementById('notifPermBtn');
+                const icon = document.getElementById('notifPermIcon');
+                if (btn && icon && 'Notification' in window) {
+                    if (Notification.permission === 'granted') {
+                        btn.classList.add('granted');
+                        btn.title = 'Notifikasi Browser Aktif';
+                        icon.className = 'fa fa-bell';
+                    } else if (Notification.permission === 'denied') {
+                        btn.classList.remove('granted');
+                        btn.title = 'Notifikasi Browser Diblokir';
+                        icon.className = 'fa fa-bell-slash';
+                    }
+                }
+            }
+
+            // Show browser notification
+            function showBrowserNotification() {
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    const notification = new Notification('⏰ Yuk Konfirm!', {
+                        body: 'Update harga emas dalam 10 detik!',
+                        icon: '{{ asset('assets/images/logo.png') }}',
+                        tag: 'gold-rate-alert',
+                        requireInteraction: false,
+                        silent: false
+                    });
+
+                    // Auto close after 5 seconds
+                    setTimeout(() => notification.close(), 5000);
+
+                    // Focus window when clicked
+                    notification.onclick = function() {
+                        window.focus();
+                        notification.close();
+                    };
+                }
+            }
+
+            // Flash document title for background tabs
+            function startTitleFlash() {
+                let isOriginal = true;
+                titleFlashInterval = setInterval(() => {
+                    document.title = isOriginal ? '🔔 YUK KONFIRM!' : originalTitle;
+                    isOriginal = !isOriginal;
+                }, 500);
+
+                // Stop after 10 seconds
+                setTimeout(stopTitleFlash, 10000);
+            }
+
+            function stopTitleFlash() {
+                if (titleFlashInterval) {
+                    clearInterval(titleFlashInterval);
+                    titleFlashInterval = null;
+                    document.title = originalTitle;
+                }
+            }
+
+            // Add visual flash to countdown badge
+            function triggerAlertMode(enable) {
+                const badge = document.getElementById('countdownBadge');
+                if (badge) {
+                    if (enable) {
+                        badge.classList.add('alert-mode');
+                    } else {
+                        badge.classList.remove('alert-mode');
+                    }
+                }
+            }
+
+            // Flash cards on update
+            function flashCards() {
+                document.querySelectorAll('.card.bg-gradient-success, .card.bg-gradient-danger').forEach(card => {
+                    card.classList.add('flash-update');
+                    setTimeout(() => card.classList.remove('flash-update'), 1000);
+                });
+            }
+
+            // Listen for Livewire events
+            $wire.on('rateUpdated', () => {
+                flashCards();
+            });
 
             // Function to check if sound is enabled
             function isSoundEnabled() {
@@ -290,12 +471,15 @@
                 const soundToggle = document.getElementById('soundToggle');
                 if (soundIcon && soundToggle) {
                     if (soundToggle.checked) {
-                        soundIcon.className = 'fa fa-bell text-success';
+                        soundIcon.className = 'fa fa-volume-up text-success';
                     } else {
-                        soundIcon.className = 'fa fa-bell-slash text-muted';
+                        soundIcon.className = 'fa fa-volume-off text-muted';
                     }
                 }
             }
+
+            // Initialize on load
+            updateNotifPermButton();
 
             // Initialize sound toggle
             const soundToggle = document.getElementById('soundToggle');
@@ -309,6 +493,11 @@
                     localStorage.setItem('goldRateSoundEnabled', this.checked ? 'true' : 'false');
                     updateSoundIcon();
                     console.log('Sound enabled:', this.checked);
+
+                    // Play test sound when enabling
+                    if (this.checked) {
+                        playDringSound();
+                    }
                 });
             }
 
@@ -397,17 +586,35 @@
                 if (countdownEl) {
                     countdownEl.textContent = secondsUntilNext + ' detik';
 
-                    // Play dring sound when countdown reaches 10 seconds (if enabled)
+                    // Trigger all notifications when countdown reaches 10 seconds
                     if (secondsUntilNext === ALERT_SECONDS && !hasPlayedAlert) {
-                        playDringSound(); // Will check isSoundEnabled() inside
+                        // 1. Play sound (if enabled)
+                        playDringSound();
+
+                        // 2. Show browser notification (works in background)
+                        showBrowserNotification();
+
+                        // 3. Flash document title (for background tabs)
+                        startTitleFlash();
+
+                        // 4. Visual alert mode
+                        triggerAlertMode(true);
+
                         hasPlayedAlert = true;
                         countdownEl.classList.add('text-warning');
+                    }
+
+                    // Change badge color based on countdown
+                    if (secondsUntilNext <= ALERT_SECONDS && secondsUntilNext > 0) {
+                        triggerAlertMode(true);
                     }
 
                     // Reset alert flag when countdown resets
                     if (secondsUntilNext > ALERT_SECONDS) {
                         hasPlayedAlert = false;
                         countdownEl.classList.remove('text-warning');
+                        triggerAlertMode(false);
+                        stopTitleFlash();
                     }
                 }
 

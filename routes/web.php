@@ -1,6 +1,7 @@
 <?php
 
 use App\Livewire\Dashboard;
+use App\Livewire\BuybackCalculator;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AjaxController;
 use App\Http\Controllers\AuthController;
@@ -66,3 +67,6 @@ Route::middleware(['auth'])->group(function () {
 });
 Route::get('gold-rate', [GoldRateController::class, 'index'])->name('gold-rate');
 Route::get('gold-rate/fetch', [GoldRateController::class, 'getRate'])->name('gold-rate.fetch');
+
+// Buyback Calculator
+Route::get('buyback-calculator', BuybackCalculator::class)->name('buyback-calculator');

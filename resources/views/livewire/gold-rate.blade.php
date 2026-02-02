@@ -139,6 +139,8 @@
                                                     <th class="text-right">Harga Jual</th>
                                                     <th class="text-right">Est. cuan 20 JT</th>
                                                     <th class="text-right">Est. cuan 30 JT</th>
+                                                    <th class="text-right">Est. cuan 40 JT</th>
+                                                    <th class="text-right">Est. cuan 50 JT</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -157,6 +159,14 @@
                                                         <td
                                                             class="text-right {{ $item['est_cuan_30'] >= 0 ? '' : 'text-danger' }}">
                                                             {{ $this->formatCurrency($item['est_cuan_30']) }}
+                                                        </td>
+                                                        <td
+                                                            class="text-right {{ $item['est_cuan_40'] >= 0 ? '' : 'text-danger' }}">
+                                                            {{ $this->formatCurrency($item['est_cuan_40']) }}
+                                                        </td>
+                                                        <td
+                                                            class="text-right {{ $item['est_cuan_50'] >= 0 ? '' : 'text-danger' }}">
+                                                            {{ $this->formatCurrency($item['est_cuan_50']) }}
                                                         </td>
                                                     </tr>
                                                 @empty

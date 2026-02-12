@@ -7,8 +7,12 @@ let startTime = null;
 let obsPassword = null;
 let messageId = 1;
 
-// Auto-detect: use backend proxy if page is loaded over HTTPS
-const useProxy = window.location.protocol === "https:";
+// Force backend proxy mode for all connections (solves Crypto API not available on HTTP from non-localhost)
+// Direct WebSocket only works on localhost or HTTPS
+const isLocalhost =
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1";
+const useProxy = !isLocalhost; // Use proxy unless accessing from localhost
 
 // ===================== CONNECTION =====================
 
@@ -26,11 +30,11 @@ function connectOBS() {
 
     let modeInfo = useProxy
         ? `<div class="alert alert-info p-2 mb-2" style="font-size:12px;">
-               <strong>🔒 Mode HTTPS:</strong> Koneksi melalui Laravel backend proxy.<br>
-               Server PHP akan menghubungkan ke OBS WebSocket.
+               <strong>🔒 Backend Proxy Mode:</strong> Koneksi melalui Laravel backend proxy.<br>
+               Server PHP akan menghubungkan ke OBS WebSocket (mendukung akses dari komputer lain).
            </div>`
         : `<div class="alert alert-success p-2 mb-2" style="font-size:12px;">
-               <strong>🔓 Mode HTTP:</strong> Koneksi langsung ke OBS WebSocket dari browser.
+               <strong>🔓 Direct Mode:</strong> Koneksi langsung ke OBS WebSocket dari browser (hanya localhost).
            </div>`;
 
     Swal.fire({

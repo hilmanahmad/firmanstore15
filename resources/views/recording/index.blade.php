@@ -29,10 +29,10 @@
                                             <div class="col-md-4 text-right">
                                                 <small class="text-muted">
                                                     <i class="fa fa-info-circle"></i>
-                                                    @if (request()->secure())
-                                                        Mode: 🔒 Backend Proxy (HTTPS)
+                                                    @if (request()->getHost() === 'localhost' || request()->getHost() === '127.0.0.1')
+                                                        Mode: 🔓 Direct WebSocket
                                                     @else
-                                                        Mode: 🔓 Direct WebSocket (HTTP)
+                                                        Mode: 🔒 Backend Proxy
                                                     @endif
                                                 </small>
                                             </div>

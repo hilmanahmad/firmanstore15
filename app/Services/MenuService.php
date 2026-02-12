@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Services\Administrator;
+namespace App\Services;
 
-use App\Models\Master\Menu;
+use App\Models\Menu;
 use Illuminate\Support\Str;
 
 class MenuService
@@ -19,7 +19,7 @@ class MenuService
         $query = $this->menu;
 
         if ($rows) {
-            return $query->where('menu_name', 'LIKE', '%' . $searchKey . '%')->orWhere('url', 'LIKE', '%' . $searchKey . '%')->skip($offset)->take($rows)->orderBy('menu_name', 'ASC')->get();
+            return $query->where('name', 'LIKE', '%' . $searchKey . '%')->orWhere('url', 'LIKE', '%' . $searchKey . '%')->skip($offset)->take($rows)->orderBy('sort', 'ASC')->get();
         } else {
             return $query->count();
         }
@@ -35,9 +35,9 @@ class MenuService
     {
         $id = Str::uuid();
         $data = [
-            'menu_name' => ucwords($request->menu_name),
+            'name' => ucwords($request->name),
             'is_header' => isset($request->is_header) ? 'true' : 'false',
-            'parent' => isset($request->parent) ? $request->parent : 'false',
+            'parent' => isset($request->parent) && $request->parent ? $request->parent : 'false',
             'url' => $request->url,
             'icon' => $request->icon,
             'have_sub_menu' => isset($request->have_sub_menu) ? 'true' : 'false',

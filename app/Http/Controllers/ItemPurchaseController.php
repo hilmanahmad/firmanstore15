@@ -24,9 +24,15 @@ class ItemPurchaseController extends Controller
 
     public function index()
     {
+        $user = auth()->user();
+        $isSuperAdmin = $user && $user->role_code === 'SUPERADMIN';
+
         return view('itemPurchase.index', [
             'title' => 'Pembelian Barang',
-            'active' => 'item-purchase'
+            'active' => 'item-purchase',
+            'isSuperAdmin' => $isSuperAdmin,
+            'currentUserId' => $user ? $user->id : null,
+            'currentUserName' => $user ? $user->name : null,
         ]);
     }
 
@@ -42,11 +48,20 @@ class ItemPurchaseController extends Controller
         $typeId = $request->input('type_id');
         $status = $request->input('status');
 
-        $query = $this->itemPurchase->getByArrayDT($rows, $offset, $searchKey, $itemId, $typeId, $status);
+        // Filter by user if not SUPERADMIN
+        $user = auth()->user();
+        $userId = null;
+        if ($user && $user->role_code !== 'SUPERADMIN') {
+            $userId = $user->id;
+        }
+
+        $query = $this->itemPurchase->getByArrayDT($rows, $offset, $searchKey, $itemId, $typeId, $status, $userId);
         $data = [];
 
         foreach ($query as $key => $q) {
             $data[$key]['id'] = $q->id;
+            $data[$key]['user_id'] = $q->user_id;
+            $data[$key]['user_name'] = $q->user->name ?? '-';
             $data[$key]['item_id'] = $q->item_id;
             $data[$key]['item'] = $q->item->name ?? '-';
             $data[$key]['type_id'] = $q->type_id;
@@ -62,7 +77,7 @@ class ItemPurchaseController extends Controller
             $data[$key]['created_at'] = Carbon::parse($q->created_at)->format('d M Y');
         }
 
-        $count = $this->itemPurchase->getByArrayDT(0, 0, $searchKey, $itemId, $typeId, $status);
+        $count = $this->itemPurchase->getByArrayDT(0, 0, $searchKey, $itemId, $typeId, $status, $userId);
 
         return response()->json([
             "total" => $count,

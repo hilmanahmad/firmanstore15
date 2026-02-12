@@ -15,9 +15,20 @@
                             <form action="{{ route('item-purchase.store') }}" method="POST" id="formData">
                                 @csrf
                                 <div class="form-row">
+                                    @if ($isSuperAdmin)
+                                        <div class="col-md-12 mb-3">
+                                            <label for="">Pembeli <span class="text-danger">*</span></label>
+                                            <input type="hidden" id="id" name="id">
+                                            <input type="hidden" id="userId">
+                                            <select name="user_id" id="user_id"
+                                                class="form-control form-control-sm user_id" required></select>
+                                        </div>
+                                    @else
+                                        <input type="hidden" name="user_id" value="{{ $currentUserId }}">
+                                        <input type="hidden" id="id" name="id">
+                                    @endif
                                     <div class="col-md-12 mb-3">
                                         <label for="">Barang <span class="text-danger">*</span></label>
-                                        <input type="hidden" id="id" name="id">
                                         <input type="hidden" id="itemId">
                                         <input type="hidden" id="typeId">
                                         <select name="item_id" id="item_id" class="form-control form-control-sm item_id"
@@ -104,6 +115,11 @@
                                             <th field="action" formatter="action" width="80" halign="center"
                                                 align="center">#</th>
                                             <th field="id" hidden></th>
+                                            <th field="user_id" hidden></th>
+                                            @if ($isSuperAdmin)
+                                                <th field="user_name" width="150" halign="center" sortable="true">
+                                                    Pembeli</th>
+                                            @endif
                                             <th field="item_id" hidden></th>
                                             <th field="type_id" hidden></th>
                                             <th field="status_badge" width="100" halign="center" align="center">
@@ -143,6 +159,9 @@
 <script src="{{ asset('assets') }}/js/jquery-3.6.0.min.js"></script>
 <script type="text/javascript">
     $(function() {
+        @if ($isSuperAdmin)
+            user();
+        @endif
         item();
         type();
         item_filter();
@@ -179,6 +198,9 @@
     function resetForm() {
         $('#formData')[0].reset();
         $('#id').val('');
+        @if ($isSuperAdmin)
+            $('#user_id').val(null).trigger('change');
+        @endif
         $('#item_id').val(null).trigger('change');
         $('#type_id').val(null).trigger('change');
         $('#btn-text').text('Simpan');

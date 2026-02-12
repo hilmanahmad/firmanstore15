@@ -17,8 +17,8 @@ function action(value, row, index) {
             <a class="action-buttons btn btn-sm btn-primary" href="javascript:void(0)" onclick="editData('${
                 row.id
             }', '${encodeURIComponent(
-            JSON.stringify(row)
-        )}')" style="display: inline-flex;align-items: center;justify-content: center;" title="Edit">
+                JSON.stringify(row),
+            )}')" style="display: inline-flex;align-items: center;justify-content: center;" title="Edit">
                 <i class="fa fa-edit" style="margin-right: 0px;"></i>
             </a>`;
     }
@@ -87,7 +87,7 @@ function confirmManual(trackingNumber) {
                     Swal.fire(
                         "Error",
                         xhr.responseJSON?.message || "Terjadi kesalahan",
-                        "error"
+                        "error",
                     );
                 },
             });
@@ -101,17 +101,23 @@ function editData(id, row) {
     $("#id").val(rowData.id);
     $("#itemId").val(rowData.item_id);
     $("#typeId").val(rowData.type_id);
+    $("#userId").val(rowData.user_id);
 
     let purchasePrice = rowData.purchase_price.replace(/[^\d]/g, "");
     $("#purchase_price").val(parseInt(purchasePrice).toLocaleString("id-ID"));
 
     $("#qty").val(rowData.qty);
     $("#tracking_number").val(
-        rowData.tracking_number !== "-" ? rowData.tracking_number : ""
+        rowData.tracking_number !== "-" ? rowData.tracking_number : "",
     );
 
     item();
     type();
+
+    // Load user selector if exists (SUPERADMIN only)
+    if ($("#user_id").length) {
+        user();
+    }
 
     $("#btn-text").text("Update");
 
@@ -119,7 +125,7 @@ function editData(id, row) {
         {
             scrollTop: $("#formData").offset().top - 100,
         },
-        500
+        500,
     );
 }
 
@@ -151,6 +157,21 @@ function item() {
         searchField: "name",
         placeholder: "-- Pilih Barang --",
         preselectedId: itemId,
+        formatText: (text) => text.toUpperCase(),
+    });
+}
+
+function user() {
+    const userId = $("#userId").val();
+    initSelect2Ajax({
+        selector: ".user_id",
+        table: "users",
+        valueField: "id",
+        textField: "name",
+        orderField: "name",
+        searchField: "name",
+        placeholder: "-- Pilih Pembeli --",
+        preselectedId: userId,
         formatText: (text) => text.toUpperCase(),
     });
 }

@@ -14,9 +14,14 @@ class ItemPurchaseService
         $this->itemPurchase = $itemPurchase;
     }
 
-    public function getByArrayDT($rows, $offset, $searchKey, $itemId = null, $typeId = null, $status = null)
+    public function getByArrayDT($rows, $offset, $searchKey, $itemId = null, $typeId = null, $status = null, $userId = null)
     {
         $query = $this->itemPurchase->query();
+
+        // Filter by user_id if provided (for non-SUPERADMIN)
+        if ($userId) {
+            $query = $query->where('user_id', $userId);
+        }
 
         if ($itemId) {
             $query = $query->where('item_id', $itemId);
@@ -48,6 +53,7 @@ class ItemPurchaseService
     {
         $id = Str::uuid();
         $data = [
+            'user_id' => $request->user_id ?? auth()->id(),
             'item_id' => $request->item_id,
             'type_id' => $request->type_id,
             'purchase_price' => str_replace(".", "", $request->purchase_price),

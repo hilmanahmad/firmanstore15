@@ -39,7 +39,6 @@ class UserService
             'name' => $request->name,
             'username' => $request->username,
             'role_code' => $request->role_code,
-            'group_code' => $request->sbu_code,
         ];
         if ($request->uuid) {
             $this->user->where('uuid', $request->uuid)->update($data);

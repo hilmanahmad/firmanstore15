@@ -46,6 +46,76 @@
                                 </div>
                             @endif
 
+                            {{-- Promo Alert --}}
+                            @if ($isPromoActive)
+                                <div class="alert alert-success alert-dismissible fade show animate__animated animate__heartBeat"
+                                    role="alert">
+                                    <i class="fa fa-bullhorn mr-2"></i>
+                                    <strong>PROMO SEDANG AKTIF!</strong> Harga beli saat ini
+                                    <strong>{{ $this->formatCurrency($buyingRate) }}</strong>
+                                    telah mencapai atau melebihi target
+                                    <strong>{{ $this->formatCurrency($promoThreshold) }}</strong>
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                            @endif
+
+                            {{-- Promo Threshold Input --}}
+                            <div class="row mb-3">
+                                <div class="col-lg-6">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <button class="btn btn-sm btn-outline-warning" type="button"
+                                            id="togglePromoSetting" onclick="togglePromoInput()">
+                                            <i class="fa fa-bell mr-1" id="promoSettingIcon"></i>
+                                            Pengaturan Promo
+                                            @if ($promoThreshold > 0)
+                                                <span
+                                                    class="badge badge-light ml-1">{{ $this->formatCurrency($promoThreshold) }}</span>
+                                            @endif
+                                        </button>
+                                        @if ($isPromoActive)
+                                            <span
+                                                class="badge badge-success ml-2 animate__animated animate__pulse animate__infinite">
+                                                <i class="fa fa-check-circle mr-1"></i> PROMO ON
+                                            </span>
+                                        @endif
+                                    </div>
+                                    <div class="card border-warning" id="promoSettingCard" style="display: none;">
+                                        <div class="card-body py-3">
+                                            <div class="form-group mb-0">
+                                                <label class="small text-muted mb-2">
+                                                    <i class="fa fa-info-circle mr-1"></i>
+                                                    Masukkan harga beli minimum untuk notifikasi promo:
+                                                </label>
+                                                <div class="input-group">
+                                                    <div class="input-group-prepend">
+                                                        <span class="input-group-text">Rp</span>
+                                                    </div>
+                                                    <input type="text" id="promoThresholdInput" class="form-control"
+                                                        placeholder="1.400.000"
+                                                        value="{{ $promoThreshold > 0 ? number_format($promoThreshold, 0, ',', '.') : '' }}">
+                                                    <div class="input-group-append">
+                                                        <button class="btn btn-warning" type="button" id="btnSetPromo">
+                                                            <i class="fa fa-check"></i> Set
+                                                        </button>
+                                                        @if ($promoThreshold > 0)
+                                                            <button class="btn btn-outline-danger" type="button"
+                                                                id="btnClearPromo">
+                                                                <i class="fa fa-times"></i>
+                                                            </button>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                                <small class="form-text text-muted">
+                                                    Notifikasi akan muncul ketika harga beli ≥ nilai yang dimasukkan
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="row">
                                 <!-- Buying Rate Card -->
                                 <div class="col-md-6 mb-4">
@@ -234,406 +304,596 @@
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                                <div class="col-md-6 mb-4">
+                                    <div class="card">
+                                        <div class="card-header  text-white py-2">
+                                            <h6 class="mb-0"><i class="fa fa-chart-bar mr-2"></i>Analisis Teknis
+                                                XAU/USD
+                                            </h6>
+                                        </div>
+                                        <div class="tradingview-widget-container">
+                                            <div class="tradingview-widget-container__widget"></div>
+                                            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js"
+                                                async>
+                                                {
+                                                    "interval": "1m",
+                                                    "width": "100%",
+                                                    "isTransparent": true,
+                                                    "height": 450,
+                                                    "symbol": "OANDA:XAUUSD",
+                                                    "showIntervalTabs": true,
+                                                    "displayMode": "single",
+                                                    "locale": "id",
+                                                    "colorTheme": "light"
+                                                }
+                                            </script>
+                                        </div>
+                                    </div>
+                                </div>
 
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <style>
-        .bg-gradient-success {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-        }
+        <style>
+            .bg-gradient-success {
+                background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            }
 
-        .bg-gradient-danger {
-            background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
-        }
+            .bg-gradient-danger {
+                background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+            }
 
-        .display-4 {
-            font-size: 2.5rem;
-        }
-
-        @media (max-width: 768px) {
             .display-4 {
-                font-size: 1.8rem;
-            }
-        }
-
-        .card {
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-        }
-
-        .spin {
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            from {
-                transform: rotate(0deg);
+                font-size: 2.5rem;
             }
 
-            to {
-                transform: rotate(360deg);
+            @media (max-width: 768px) {
+                .display-4 {
+                    font-size: 1.8rem;
+                }
             }
-        }
 
-        /* Countdown animations */
-        .countdown-badge {
-            transition: all 0.3s ease;
-        }
+            .card {
+                border-radius: 15px;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+                transition: transform 0.3s ease;
+            }
 
-        .countdown-badge.alert-mode {
-            background: linear-gradient(45deg, #f39c12, #e74c3c) !important;
-            animation: pulse-alert 0.5s ease-in-out infinite;
-            transform: scale(1.1);
-        }
+            .card:hover {
+                transform: translateY(-5px);
+            }
 
-        @keyframes pulse-alert {
+            .spin {
+                animation: spin 1s linear infinite;
+            }
 
-            0%,
-            100% {
-                opacity: 1;
+            @keyframes spin {
+                from {
+                    transform: rotate(0deg);
+                }
+
+                to {
+                    transform: rotate(360deg);
+                }
+            }
+
+            /* Countdown animations */
+            .countdown-badge {
+                transition: all 0.3s ease;
+            }
+
+            .countdown-badge.alert-mode {
+                background: linear-gradient(45deg, #f39c12, #e74c3c) !important;
+                animation: pulse-alert 0.5s ease-in-out infinite;
                 transform: scale(1.1);
             }
 
-            50% {
-                opacity: 0.8;
-                transform: scale(1.15);
-            }
-        }
+            @keyframes pulse-alert {
 
-        .hourglass-spin {
-            display: inline-block;
-            animation: hourglass-rotate 2s ease-in-out infinite;
-        }
+                0%,
+                100% {
+                    opacity: 1;
+                    transform: scale(1.1);
+                }
 
-        @keyframes hourglass-rotate {
-            0% {
-                transform: rotate(0deg);
+                50% {
+                    opacity: 0.8;
+                    transform: scale(1.15);
+                }
             }
 
-            50% {
-                transform: rotate(180deg);
+            .hourglass-spin {
+                display: inline-block;
+                animation: hourglass-rotate 2s ease-in-out infinite;
             }
 
-            100% {
-                transform: rotate(180deg);
+            @keyframes hourglass-rotate {
+                0% {
+                    transform: rotate(0deg);
+                }
+
+                50% {
+                    transform: rotate(180deg);
+                }
+
+                100% {
+                    transform: rotate(180deg);
+                }
             }
-        }
 
-        /* Flash animation for cards when update */
-        .flash-update {
-            animation: flash-border 1s ease-out;
-        }
-
-        @keyframes flash-border {
-            0% {
-                box-shadow: 0 0 20px 5px rgba(255, 193, 7, 0.8);
+            /* Flash animation for cards when update */
+            .flash-update {
+                animation: flash-border 1s ease-out;
             }
 
-            100% {
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            @keyframes flash-border {
+                0% {
+                    box-shadow: 0 0 20px 5px rgba(255, 193, 7, 0.8);
+                }
+
+                100% {
+                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+                }
             }
-        }
 
-        /* Notification permission button */
-        #notifPermBtn.granted {
-            background-color: #28a745 !important;
-            border-color: #28a745 !important;
-            color: white !important;
-        }
+            /* Notification permission button */
+            #notifPermBtn.granted {
+                background-color: #28a745 !important;
+                border-color: #28a745 !important;
+                color: white !important;
+            }
 
-        /* Title flash for background notification */
-        .title-flash {
-            animation: title-blink 1s ease-in-out infinite;
-        }
-    </style>
+            /* Title flash for background notification */
+            .title-flash {
+                animation: title-blink 1s ease-in-out infinite;
+            }
+        </style>
 
-    @script
-        <script>
-            const TARGET_SECOND = 3;
-            const ALERT_SECONDS = 10; // Bunyi dring saat 10 detik sebelum refresh
-            let lastFetchMinute = -1;
-            let hasPlayedAlert = false;
-            let originalTitle = document.title;
-            let titleFlashInterval = null;
+        @script
+            <script>
+                const TARGET_SECOND = 3;
+                const ALERT_SECONDS = 10; // Bunyi dring saat 10 detik sebelum refresh
+                let lastFetchMinute = -1;
+                let hasPlayedAlert = false;
+                let originalTitle = document.title;
+                let titleFlashInterval = null;
 
-            // Request notification permission
-            window.requestNotificationPermission = function() {
-                if ('Notification' in window) {
-                    Notification.requestPermission().then(permission => {
-                        updateNotifPermButton();
-                        if (permission === 'granted') {
-                            // Test notification
-                            new Notification('🔔 Notifikasi Aktif!', {
-                                body: 'Anda akan menerima notifikasi 10 detik sebelum update harga emas.',
-                                icon: '{{ asset('assets/images/logo.png') }}',
-                                tag: 'gold-rate-test'
-                            });
+                // Request notification permission
+                window.requestNotificationPermission = function() {
+                    if ('Notification' in window) {
+                        Notification.requestPermission().then(permission => {
+                            updateNotifPermButton();
+                            if (permission === 'granted') {
+                                // Test notification
+                                new Notification('🔔 Notifikasi Aktif!', {
+                                    body: 'Anda akan menerima notifikasi 10 detik sebelum update harga emas.',
+                                    icon: '{{ asset('assets/images/logo.png') }}',
+                                    tag: 'gold-rate-test'
+                                });
+                            }
+                        });
+                    } else {
+                        alert('Browser tidak mendukung notifikasi');
+                    }
+                }
+
+                // Update notification permission button
+                function updateNotifPermButton() {
+                    const btn = document.getElementById('notifPermBtn');
+                    const icon = document.getElementById('notifPermIcon');
+                    if (btn && icon && 'Notification' in window) {
+                        if (Notification.permission === 'granted') {
+                            btn.classList.add('granted');
+                            btn.title = 'Notifikasi Browser Aktif';
+                            icon.className = 'fa fa-bell';
+                        } else if (Notification.permission === 'denied') {
+                            btn.classList.remove('granted');
+                            btn.title = 'Notifikasi Browser Diblokir';
+                            icon.className = 'fa fa-bell-slash';
+                        }
+                    }
+                }
+
+                // Show browser notification
+                function showBrowserNotification() {
+                    if ('Notification' in window && Notification.permission === 'granted') {
+                        const notification = new Notification('⏰ Yuk Konfirm!', {
+                            body: 'Update harga emas dalam 10 detik!',
+                            icon: '{{ asset('assets/images/logo.png') }}',
+                            tag: 'gold-rate-alert',
+                            requireInteraction: false,
+                            silent: false
+                        });
+
+                        // Auto close after 5 seconds
+                        setTimeout(() => notification.close(), 5000);
+
+                        // Focus window when clicked
+                        notification.onclick = function() {
+                            window.focus();
+                            notification.close();
+                        };
+                    }
+                }
+
+                // Flash document title for background tabs
+                function startTitleFlash() {
+                    let isOriginal = true;
+                    titleFlashInterval = setInterval(() => {
+                        document.title = isOriginal ? '🔔 YUK KONFIRM!' : originalTitle;
+                        isOriginal = !isOriginal;
+                    }, 500);
+
+                    // Stop after 10 seconds
+                    setTimeout(stopTitleFlash, 10000);
+                }
+
+                function stopTitleFlash() {
+                    if (titleFlashInterval) {
+                        clearInterval(titleFlashInterval);
+                        titleFlashInterval = null;
+                        document.title = originalTitle;
+                    }
+                }
+
+                // Add visual flash to countdown badge
+                function triggerAlertMode(enable) {
+                    const badge = document.getElementById('countdownBadge');
+                    if (badge) {
+                        if (enable) {
+                            badge.classList.add('alert-mode');
+                        } else {
+                            badge.classList.remove('alert-mode');
+                        }
+                    }
+                }
+
+                // Flash cards on update
+                function flashCards() {
+                    document.querySelectorAll('.card.bg-gradient-success, .card.bg-gradient-danger').forEach(card => {
+                        card.classList.add('flash-update');
+                        setTimeout(() => card.classList.remove('flash-update'), 1000);
+                    });
+                }
+
+                // Listen for Livewire events
+                $wire.on('rateUpdated', () => {
+                    flashCards();
+                });
+
+                // Listen for promo activation
+                $wire.on('promoActivated', (event) => {
+                    const data = event[0] || event;
+                    const buyingRate = data.buyingRate;
+                    const threshold = data.threshold;
+
+                    // Show browser notification
+                    if ('Notification' in window && Notification.permission === 'granted') {
+                        const notification = new Notification('🎉 PROMO AKTIF!', {
+                            body: `Harga beli Rp ${buyingRate.toLocaleString('id-ID')} telah mencapai target!`,
+                            icon: '{{ asset('assets/images/logo.png') }}',
+                            tag: 'gold-promo-alert',
+                            requireInteraction: true,
+                            silent: false
+                        });
+
+                        notification.onclick = function() {
+                            window.focus();
+                            notification.close();
+                        };
+                    }
+
+                    // Play sound
+                    if (isSoundEnabled()) {
+                        playPromoSound();
+                    }
+
+                    // Flash title
+                    startPromoTitleFlash();
+                });
+
+                // Play promo sound
+                function playPromoSound() {
+                    try {
+                        const audio = new Audio();
+                        audio.src =
+                            'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIGGS86+mjVhQKTKXh67hYFAgzjddqoZEMFEum5u2mUxELOoPK6sV2FgozmNDkw3MdBiV/wvDdjkAMDlmu4+yrWBEGLInZ8c1yIwUledPw2YM6CAo9jcnqxXITBi+F1PLSfC4GJnrC8OCNPwwOV7Hk7KtYEQQuhtbxzXQjBSR1z/DdhzkHCj+JyurHcxQHL4HM7t15KwYncrnl7qVSEgQvhtTyz3sjBCJzu+zkqVEOCy+ByvHWfy0FI3fB8N+OQwwPWrDp7a1bEgYufMfsw3IdBSp5vfDakz8MCz6Kx+rGchUFMYbU8sx4KgUods3v24Y3Bwo+jMjrx3MVBSuAy+/XgSsGKHi98N+LQAoJVK7m7a5cEwUneb7q05pBDAk+i8jrx3MVBCiBzO7WeS0FJXa88NuBOQgKQJDJ68d0FAQrhszv1YEvBih3vPDfi0EKDFex5u2vXhQHLoPO89CHNwYle7/p0ptEDgpBjcnqxnMUBCuBye/WgCwGJ3i88OGMPgsLV67n7q9eFAgti8zw2YQ5CAo+jMfqxHIVBSyBzu7TeywGJ3e58N+KQQsKVK/m7bJgEgcuf8nv1Ik6BwpAkMjpxHIVBCx+yO/VgywGKHi98N+KQQsKVK/m7bJgEgcuf8nv1Ik6BwpAkMjpxHIVBCx+yO/VgywGKHi98N+KQQsKVK/m7bJgEgcuf8nv1Ik6BwpAkMjpxHIVBCx+yO/VgywGKHi98N+KQQsKVK/m7bJgEgcuf8nv1Ik6BwpAkMjpxHIVBCx+yO/VgywGKHi98N+KQQsKVK/m7bJgEgcuf8nv1Ik6BwpAkMjpxHIVBCx+yO/VgywGKHi98N+KQQsKVK/m7bJgEg==';
+                        audio.volume = 0.8;
+                        audio.play();
+
+                        // Play multiple beeps
+                        setTimeout(() => audio.play(), 300);
+                        setTimeout(() => audio.play(), 600);
+
+                        // Speech
+                        setTimeout(() => {
+                            if ('speechSynthesis' in window) {
+                                window.speechSynthesis.cancel();
+                                const utterance = new SpeechSynthesisUtterance('Promo aktif!');
+                                utterance.lang = 'id-ID';
+                                utterance.rate = 1.0;
+                                utterance.pitch = 1.3;
+                                utterance.volume = 1.0;
+                                window.speechSynthesis.speak(utterance);
+                            }
+                        }, 800);
+                    } catch (e) {
+                        console.log('Promo audio error:', e);
+                    }
+                }
+
+                // Flash title for promo
+                function startPromoTitleFlash() {
+                    let isOriginal = true;
+                    let flashCount = 0;
+                    const promoFlashInterval = setInterval(() => {
+                        document.title = isOriginal ? '🎉 PROMO AKTIF!' : originalTitle;
+                        isOriginal = !isOriginal;
+                        flashCount++;
+
+                        if (flashCount >= 20) { // 10 seconds
+                            clearInterval(promoFlashInterval);
+                            document.title = originalTitle;
+                        }
+                    }, 500);
+                }
+
+                // Function to check if sound is enabled
+                function isSoundEnabled() {
+                    return localStorage.getItem('goldRateSoundEnabled') !== 'false';
+                }
+
+                // Function to update sound icon
+                function updateSoundIcon() {
+                    const soundIcon = document.getElementById('soundIcon');
+                    const soundToggle = document.getElementById('soundToggle');
+                    if (soundIcon && soundToggle) {
+                        if (soundToggle.checked) {
+                            soundIcon.className = 'fa fa-volume-up text-success';
+                        } else {
+                            soundIcon.className = 'fa fa-volume-off text-muted';
+                        }
+                    }
+                }
+
+                // Initialize on load
+                updateNotifPermButton();
+
+                // Initialize sound toggle
+                const soundToggle = document.getElementById('soundToggle');
+                if (soundToggle) {
+                    // Set initial state from localStorage
+                    soundToggle.checked = isSoundEnabled();
+                    updateSoundIcon();
+
+                    // Listen for toggle changes
+                    soundToggle.addEventListener('change', function() {
+                        localStorage.setItem('goldRateSoundEnabled', this.checked ? 'true' : 'false');
+                        updateSoundIcon();
+                        console.log('Sound enabled:', this.checked);
+
+                        // Play test sound when enabling
+                        if (this.checked) {
+                            playDringSound();
                         }
                     });
-                } else {
-                    alert('Browser tidak mendukung notifikasi');
                 }
-            }
 
-            // Update notification permission button
-            function updateNotifPermButton() {
-                const btn = document.getElementById('notifPermBtn');
-                const icon = document.getElementById('notifPermIcon');
-                if (btn && icon && 'Notification' in window) {
-                    if (Notification.permission === 'granted') {
-                        btn.classList.add('granted');
-                        btn.title = 'Notifikasi Browser Aktif';
-                        icon.className = 'fa fa-bell';
-                    } else if (Notification.permission === 'denied') {
-                        btn.classList.remove('granted');
-                        btn.title = 'Notifikasi Browser Diblokir';
-                        icon.className = 'fa fa-bell-slash';
+                // Create voice notification "yuk konfirm"
+                function playDringSound() {
+                    // Double check if sound is enabled before playing
+                    if (!isSoundEnabled()) {
+                        console.log('Sound is disabled, not playing');
+                        return;
+                    }
+
+                    try {
+                        // Method 1: Try HTML5 Audio with base64 encoded beep sound (most reliable)
+                        const audio = new Audio();
+                        // Simple notification beep sound (data URI)
+                        audio.src =
+                            'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIGGS86+mjVhQKTKXh67hYFAgzjddqoZEMFEum5u2mUxELOoPK6sV2FgozmNDkw3MdBiV/wvDdjkAMDlmu4+yrWBEGLInZ8c1yIwUledPw2YM6CAo9jcnqxXITBi+F1PLSfC4GJnrC8OCNPwwOV7Hk7KtYEQQuhtbxzXQjBSR1z/DdhzkHCj+JyurHcxQHL4HM7t15KwYncrnl7qVSEgQvhtTyz3sjBCJzu+zkqVEOCy+ByvHWfy0FI3fB8N+OQwwPWrDp7a1bEgYufMfsw3IdBSp5vfDakz8MCz6Kx+rGchUFMYbU8sx4KgUods3v24Y3Bwo+jMjrx3MVBSuAy+/XgSsGKHi98N+LQAoJVK7m7a5cEwUneb7q05pBDAk+i8jrx3MVBCiBzO7WeS0FJXa88NuBOQgKQJDJ68d0FAQrhszv1YEvBih3vPDfi0EKDFex5u2vXhQHLoPO89CHNwYle7/p0ptEDgpBjcnqxnMUBCuBye/WgCwGJ3i88OGMPgsLV67n7q9eFAgti8zw2YQ5CAo+jMfqxHIVBSyBzu7TeywGJ3e58N+KQQsKVK/m7bJgEgcuf8nv1Ik6BwpAkMjpxHIVBCx+yO/VgywGKHi98N+KQQsKVK/m7bJgEgcuf8nv1Ik6BwpAkMjpxHIVBCx+yO/VgywGKHi98N+KQQsKVK/m7bJgEgcuf8nv1Ik6BwpAkMjpxHIVBCx+yO/VgywGKHi98N+KQQsKVK/m7bJgEgcuf8nv1Ik6BwpAkMjpxHIVBCx+yO/VgywGKHi98N+KQQsKVK/m7bJgEgcuf8nv1Ik6BwpAkMjpxHIVBCx+yO/VgywGKHi98N+KQQsKVK/m7bJgEg==';
+                        audio.volume = 0.7;
+
+                        const playPromise = audio.play();
+                        if (playPromise !== undefined) {
+                            playPromise.then(() => {
+                                console.log('Audio beep played successfully');
+                            }).catch(e => {
+                                console.log('Audio beep failed:', e);
+                            });
+                        }
+
+                        // Also try speech synthesis after beep
+                        setTimeout(() => {
+                            if ('speechSynthesis' in window) {
+                                // Cancel any ongoing speech
+                                window.speechSynthesis.cancel();
+
+                                const utterance = new SpeechSynthesisUtterance('yuk konfirm');
+                                utterance.lang = 'id-ID';
+                                utterance.rate = 1.0;
+                                utterance.pitch = 1.2;
+                                utterance.volume = 1.0;
+
+                                utterance.onstart = () => console.log('Speech started');
+                                utterance.onerror = (e) => console.log('Speech error:', e);
+                                utterance.onend = () => console.log('Speech ended');
+
+                                window.speechSynthesis.speak(utterance);
+                            }
+                        }, 300);
+
+                    } catch (e) {
+                        console.log('Audio error:', e);
                     }
                 }
-            }
 
-            // Show browser notification
-            function showBrowserNotification() {
-                if ('Notification' in window && Notification.permission === 'granted') {
-                    const notification = new Notification('⏰ Yuk Konfirm!', {
-                        body: 'Update harga emas dalam 10 detik!',
-                        icon: '{{ asset('assets/images/logo.png') }}',
-                        tag: 'gold-rate-alert',
-                        requireInteraction: false,
-                        silent: false
-                    });
-
-                    // Auto close after 5 seconds
-                    setTimeout(() => notification.close(), 5000);
-
-                    // Focus window when clicked
-                    notification.onclick = function() {
-                        window.focus();
-                        notification.close();
-                    };
-                }
-            }
-
-            // Flash document title for background tabs
-            function startTitleFlash() {
-                let isOriginal = true;
-                titleFlashInterval = setInterval(() => {
-                    document.title = isOriginal ? '🔔 YUK KONFIRM!' : originalTitle;
-                    isOriginal = !isOriginal;
-                }, 500);
-
-                // Stop after 10 seconds
-                setTimeout(stopTitleFlash, 10000);
-            }
-
-            function stopTitleFlash() {
-                if (titleFlashInterval) {
-                    clearInterval(titleFlashInterval);
-                    titleFlashInterval = null;
-                    document.title = originalTitle;
-                }
-            }
-
-            // Add visual flash to countdown badge
-            function triggerAlertMode(enable) {
-                const badge = document.getElementById('countdownBadge');
-                if (badge) {
-                    if (enable) {
-                        badge.classList.add('alert-mode');
-                    } else {
-                        badge.classList.remove('alert-mode');
+                // Toggle Promo Setting Card
+                window.togglePromoInput = function() {
+                    const card = document.getElementById('promoSettingCard');
+                    const icon = document.getElementById('promoSettingIcon');
+                    if (card) {
+                        if (card.style.display === 'none') {
+                            card.style.display = 'block';
+                            icon.className = 'fa fa-bell-slash mr-1';
+                        } else {
+                            card.style.display = 'none';
+                            icon.className = 'fa fa-bell mr-1';
+                        }
                     }
                 }
-            }
 
-            // Flash cards on update
-            function flashCards() {
-                document.querySelectorAll('.card.bg-gradient-success, .card.bg-gradient-danger').forEach(card => {
-                    card.classList.add('flash-update');
-                    setTimeout(() => card.classList.remove('flash-update'), 1000);
-                });
-            }
-
-            // Listen for Livewire events
-            $wire.on('rateUpdated', () => {
-                flashCards();
-            });
-
-            // Function to check if sound is enabled
-            function isSoundEnabled() {
-                return localStorage.getItem('goldRateSoundEnabled') !== 'false';
-            }
-
-            // Function to update sound icon
-            function updateSoundIcon() {
-                const soundIcon = document.getElementById('soundIcon');
-                const soundToggle = document.getElementById('soundToggle');
-                if (soundIcon && soundToggle) {
-                    if (soundToggle.checked) {
-                        soundIcon.className = 'fa fa-volume-up text-success';
-                    } else {
-                        soundIcon.className = 'fa fa-volume-off text-muted';
-                    }
-                }
-            }
-
-            // Initialize on load
-            updateNotifPermButton();
-
-            // Initialize sound toggle
-            const soundToggle = document.getElementById('soundToggle');
-            if (soundToggle) {
-                // Set initial state from localStorage
-                soundToggle.checked = isSoundEnabled();
-                updateSoundIcon();
-
-                // Listen for toggle changes
-                soundToggle.addEventListener('change', function() {
-                    localStorage.setItem('goldRateSoundEnabled', this.checked ? 'true' : 'false');
-                    updateSoundIcon();
-                    console.log('Sound enabled:', this.checked);
-
-                    // Play test sound when enabling
-                    if (this.checked) {
-                        playDringSound();
-                    }
-                });
-            }
-
-            // Create voice notification "yuk konfirm"
-            function playDringSound() {
-                // Double check if sound is enabled before playing
-                if (!isSoundEnabled()) {
-                    console.log('Sound is disabled, not playing');
-                    return;
+                // Format Rupiah for Promo Threshold Input
+                function formatRupiah(angka) {
+                    if (!angka) return '';
+                    const number = angka.toString().replace(/[^\d]/g, '');
+                    if (!number) return '';
+                    return number.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
                 }
 
-                try {
-                    // Method 1: Try HTML5 Audio with base64 encoded beep sound (most reliable)
-                    const audio = new Audio();
-                    // Simple notification beep sound (data URI)
-                    audio.src =
-                        'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIGGS86+mjVhQKTKXh67hYFAgzjddqoZEMFEum5u2mUxELOoPK6sV2FgozmNDkw3MdBiV/wvDdjkAMDlmu4+yrWBEGLInZ8c1yIwUledPw2YM6CAo9jcnqxXITBi+F1PLSfC4GJnrC8OCNPwwOV7Hk7KtYEQQuhtbxzXQjBSR1z/DdhzkHCj+JyurHcxQHL4HM7t15KwYncrnl7qVSEgQvhtTyz3sjBCJzu+zkqVEOCy+ByvHWfy0FI3fB8N+OQwwPWrDp7a1bEgYufMfsw3IdBSp5vfDakz8MCz6Kx+rGchUFMYbU8sx4KgUods3v24Y3Bwo+jMjrx3MVBSuAy+/XgSsGKHi98N+LQAoJVK7m7a5cEwUneb7q05pBDAk+i8jrx3MVBCiBzO7WeS0FJXa88NuBOQgKQJDJ68d0FAQrhszv1YEvBih3vPDfi0EKDFex5u2vXhQHLoPO89CHNwYle7/p0ptEDgpBjcnqxnMUBCuBye/WgCwGJ3i88OGMPgsLV67n7q9eFAgti8zw2YQ5CAo+jMfqxHIVBSyBzu7TeywGJ3e58N+KQQsKVK/m7bJgEgcuf8nv1Ik6BwpAkMjpxHIVBCx+yO/VgywGKHi98N+KQQsKVK/m7bJgEgcuf8nv1Ik6BwpAkMjpxHIVBCx+yO/VgywGKHi98N+KQQsKVK/m7bJgEgcuf8nv1Ik6BwpAkMjpxHIVBCx+yO/VgywGKHi98N+KQQsKVK/m7bJgEgcuf8nv1Ik6BwpAkMjpxHIVBCx+yO/VgywGKHi98N+KQQsKVK/m7bJgEgcuf8nv1Ik6BwpAkMjpxHIVBCx+yO/VgywGKHi98N+KQQsKVK/m7bJgEg==';
-                    audio.volume = 0.7;
+                // Parse rupiah to number
+                function parseRupiah(rupiah) {
+                    if (!rupiah) return 0;
+                    return parseInt(rupiah.toString().replace(/\./g, '')) || 0;
+                }
 
-                    const playPromise = audio.play();
-                    if (playPromise !== undefined) {
-                        playPromise.then(() => {
-                            console.log('Audio beep played successfully');
-                        }).catch(e => {
-                            console.log('Audio beep failed:', e);
+                // Initialize promo input
+                function initPromoInput() {
+                    const promoInput = document.getElementById('promoThresholdInput');
+                    const btnSet = document.getElementById('btnSetPromo');
+                    const btnClear = document.getElementById('btnClearPromo');
+
+                    if (promoInput) {
+                        // Format on input
+                        promoInput.addEventListener('input', function(e) {
+                            const cursorPos = e.target.selectionStart;
+                            const oldLength = e.target.value.length;
+                            const formatted = formatRupiah(e.target.value);
+                            e.target.value = formatted;
+
+                            // Adjust cursor position
+                            const newLength = formatted.length;
+                            const diff = newLength - oldLength;
+                            e.target.setSelectionRange(cursorPos + diff, cursorPos + diff);
+                        });
+
+                        // Submit on Enter key
+                        promoInput.addEventListener('keypress', function(e) {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                setPromoThreshold();
+                            }
                         });
                     }
 
-                    // Also try speech synthesis after beep
-                    setTimeout(() => {
-                        if ('speechSynthesis' in window) {
-                            // Cancel any ongoing speech
-                            window.speechSynthesis.cancel();
+                    if (btnSet) {
+                        btnSet.addEventListener('click', function() {
+                            setPromoThreshold();
+                        });
+                    }
 
-                            const utterance = new SpeechSynthesisUtterance('yuk konfirm');
-                            utterance.lang = 'id-ID';
-                            utterance.rate = 1.0;
-                            utterance.pitch = 1.2;
-                            utterance.volume = 1.0;
+                    if (btnClear) {
+                        btnClear.addEventListener('click', function() {
+                            const promoInput = document.getElementById('promoThresholdInput');
+                            if (promoInput) promoInput.value = '';
+                            @this.set('promoThreshold', 0);
+                            @this.updatePromoThreshold();
+                        });
+                    }
+                }
 
-                            utterance.onstart = () => console.log('Speech started');
-                            utterance.onerror = (e) => console.log('Speech error:', e);
-                            utterance.onend = () => console.log('Speech ended');
+                function setPromoThreshold() {
+                    const promoInput = document.getElementById('promoThresholdInput');
+                    if (promoInput) {
+                        const numericValue = parseRupiah(promoInput.value);
+                        @this.set('promoThreshold', numericValue);
+                        @this.updatePromoThreshold();
+                    }
+                }
 
-                            window.speechSynthesis.speak(utterance);
+                // Initialize on load
+                initPromoInput();
+
+                // Initialize TradingView Widget
+                if (typeof TradingView !== 'undefined') {
+                    new TradingView.widget({
+                        "width": "100%",
+                        "height": 480,
+                        "symbol": "OANDA:XAUUSD",
+                        "interval": "1",
+                        "timezone": "Asia/Jakarta",
+                        "theme": "light",
+                        "style": "1",
+                        "locale": "id",
+                        "toolbar_bg": "#f1f3f6",
+                        "enable_publishing": false,
+                        "hide_legend": false,
+                        "save_image": false,
+                        "container_id": "tradingview_xauusd"
+                    });
+                }
+
+                // Check every 500ms if it's time to fetch (at second 3 of every minute)
+                setInterval(() => {
+                    const now = new Date();
+                    const currentSecond = now.getSeconds();
+                    const currentMinute = now.getMinutes();
+
+                    // Update countdown display
+                    let secondsUntilNext;
+                    if (currentSecond < TARGET_SECOND) {
+                        secondsUntilNext = TARGET_SECOND - currentSecond;
+                    } else {
+                        secondsUntilNext = (60 - currentSecond) + TARGET_SECOND;
+                    }
+
+                    const countdownEl = document.getElementById('countdown');
+                    if (countdownEl) {
+                        countdownEl.textContent = secondsUntilNext + ' detik';
+
+                        // Trigger all notifications when countdown reaches 10 seconds
+                        if (secondsUntilNext === ALERT_SECONDS && !hasPlayedAlert) {
+                            // 1. Play sound (if enabled)
+                            playDringSound();
+
+                            // 2. Show browser notification (works in background)
+                            showBrowserNotification();
+
+                            // 3. Flash document title (for background tabs)
+                            startTitleFlash();
+
+                            // 4. Visual alert mode
+                            triggerAlertMode(true);
+
+                            hasPlayedAlert = true;
+                            countdownEl.classList.add('text-warning');
                         }
-                    }, 300);
 
-                } catch (e) {
-                    console.log('Audio error:', e);
-                }
-            } // Initialize TradingView Widget
-            if (typeof TradingView !== 'undefined') {
-                new TradingView.widget({
-                    "width": "100%",
-                    "height": 480,
-                    "symbol": "OANDA:XAUUSD",
-                    "interval": "1",
-                    "timezone": "Asia/Jakarta",
-                    "theme": "light",
-                    "style": "1",
-                    "locale": "id",
-                    "toolbar_bg": "#f1f3f6",
-                    "enable_publishing": false,
-                    "hide_legend": false,
-                    "save_image": false,
-                    "container_id": "tradingview_xauusd"
-                });
-            }
+                        // Change badge color based on countdown
+                        if (secondsUntilNext <= ALERT_SECONDS && secondsUntilNext > 0) {
+                            triggerAlertMode(true);
+                        }
 
-            // Check every 500ms if it's time to fetch (at second 3 of every minute)
-            setInterval(() => {
-                const now = new Date();
-                const currentSecond = now.getSeconds();
-                const currentMinute = now.getMinutes();
-
-                // Update countdown display
-                let secondsUntilNext;
-                if (currentSecond < TARGET_SECOND) {
-                    secondsUntilNext = TARGET_SECOND - currentSecond;
-                } else {
-                    secondsUntilNext = (60 - currentSecond) + TARGET_SECOND;
-                }
-
-                const countdownEl = document.getElementById('countdown');
-                if (countdownEl) {
-                    countdownEl.textContent = secondsUntilNext + ' detik';
-
-                    // Trigger all notifications when countdown reaches 10 seconds
-                    if (secondsUntilNext === ALERT_SECONDS && !hasPlayedAlert) {
-                        // 1. Play sound (if enabled)
-                        playDringSound();
-
-                        // 2. Show browser notification (works in background)
-                        showBrowserNotification();
-
-                        // 3. Flash document title (for background tabs)
-                        startTitleFlash();
-
-                        // 4. Visual alert mode
-                        triggerAlertMode(true);
-
-                        hasPlayedAlert = true;
-                        countdownEl.classList.add('text-warning');
+                        // Reset alert flag when countdown resets
+                        if (secondsUntilNext > ALERT_SECONDS) {
+                            hasPlayedAlert = false;
+                            countdownEl.classList.remove('text-warning');
+                            triggerAlertMode(false);
+                            stopTitleFlash();
+                        }
                     }
 
-                    // Change badge color based on countdown
-                    if (secondsUntilNext <= ALERT_SECONDS && secondsUntilNext > 0) {
-                        triggerAlertMode(true);
+                    // Fetch at second 3
+                    if (currentSecond === TARGET_SECOND && currentMinute !== lastFetchMinute) {
+                        lastFetchMinute = currentMinute;
+                        $wire.fetchRate();
                     }
-
-                    // Reset alert flag when countdown resets
-                    if (secondsUntilNext > ALERT_SECONDS) {
-                        hasPlayedAlert = false;
-                        countdownEl.classList.remove('text-warning');
-                        triggerAlertMode(false);
-                        stopTitleFlash();
-                    }
-                }
-
-                // Fetch at second 3
-                if (currentSecond === TARGET_SECOND && currentMinute !== lastFetchMinute) {
-                    lastFetchMinute = currentMinute;
-                    $wire.fetchRate();
-                }
-            }, 500);
-        </script>
-    @endscript
-</div>
+                }, 500);
+            </script>
+        @endscript
+    </div>

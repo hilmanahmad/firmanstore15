@@ -17,6 +17,7 @@
         "maatwebsite/excel": "^1.1",
         "phpoffice/phpspreadsheet": "^4.4",
         "ramsey/uuid": "^4.7",
+        "textalk/websocket": "^1.5",
         "yajra/laravel-datatables-oracle": "^12"
     },
     "require-dev": {

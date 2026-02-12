@@ -26,7 +26,9 @@
             <ul class="navbar-list">
                 <li class="line-height">
                     <a href="#" class="search-toggle iq-waves-effect d-flex align-items-center">
-                        <img src="../assets/images/user/1.jpg" class="img-fluid rounded mr-3" alt="user">
+                        {{-- @if (auth()->user()->role_code === 'SUPERADMIN')
+                            <img src="../assets/images/user/1.jpg" class="img-fluid rounded mr-3" alt="user">
+                        @endif --}}
                         <div class="caption">
                             <h6 class="mb-0 line-height">
                                 {{ isset(auth()->user()->name) ? auth()->user()->name : 'Guest' }}

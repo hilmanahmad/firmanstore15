@@ -25,6 +25,7 @@ class User extends Authenticatable
         'name',
         'username',
         'password',
+        'role_code',
     ];
 
     /**
@@ -48,5 +49,55 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Get the role that owns the user.
+     */
+    public function role()
+    {
+        return $this->belongsTo(Role::class, 'role_code', 'code');
+    }
+
+    /**
+     * Check if user has access to a specific menu
+     */
+    public function hasMenuAccess($menuId, $permission = 'can_view')
+    {
+        if (!$this->role) {
+            return false;
+        }
+
+        return $this->role->hasMenuAccess($menuId, $permission);
+    }
+
+    /**
+     * Get all accessible menu IDs for the user
+     */
+    public function getAccessibleMenuIds()
+    {
+        if (!$this->role) {
+            return collect();
+        }
+
+        return RoleMenuAccess::where('role_code', $this->role_code)
+            ->where('can_view', true)
+            ->pluck('menu_id');
+    }
+
+    /**
+     * Check if user has a specific role
+     */
+    public function hasRole($roleCode)
+    {
+        return $this->role_code === $roleCode;
+    }
+
+    /**
+     * Check if user is admin/super admin
+     */
+    public function isAdmin()
+    {
+        return in_array($this->role_code, ['ADMIN', 'SUPERADMIN']);
     }
 }

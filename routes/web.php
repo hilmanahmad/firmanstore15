@@ -8,6 +8,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\TypeController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerController;
@@ -15,8 +16,10 @@ use App\Http\Controllers\GoldRateController; // Tambahkan ini
 use App\Http\Controllers\ItemHistoryController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\ItemPurchaseController;
-use App\Http\Controllers\Administrator\MenuController;
-use App\Http\Controllers\Administrator\UserController;
+use App\Http\Controllers\RoleMenuAccessController;
+use App\Http\Controllers\MenuController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\RecordingController;
 
 Route::get('/', [AuthController::class, 'index'])->middleware('guest');
 Route::post('login', [AuthController::class, 'authentication'])->name('login');
@@ -39,10 +42,26 @@ Route::middleware(['auth'])->group(function () {
     Route::get('dashboard', Dashboard::class)->name('dashboard');
     Route::get('recap-order-datatable', [HomeController::class, 'datatable'])->name('recaporderdatatable');
 
+    // Role Management
+    Route::resource('role', RoleController::class);
+    Route::get('role-datatable', [RoleController::class, 'datatable'])->name('roledatatable');
+    Route::get('role-all', [RoleController::class, 'getAll'])->name('role.all');
+
+    // Role Menu Access
+    Route::get('role-menu-access', [RoleMenuAccessController::class, 'index'])->name('role-menu-access.index');
+    Route::get('role-menu-access/get-by-role', [RoleMenuAccessController::class, 'getByRole'])->name('role-menu-access.get-by-role');
+    Route::post('role-menu-access', [RoleMenuAccessController::class, 'store'])->name('role-menu-access.store');
+    Route::post('role-menu-access/update-single', [RoleMenuAccessController::class, 'updateSingle'])->name('role-menu-access.update-single');
+    Route::post('role-menu-access/copy', [RoleMenuAccessController::class, 'copyAccess'])->name('role-menu-access.copy');
+
     Route::resource('user', UserController::class);
     Route::get('user-datatable', [UserController::class, 'datatable'])->name('userdatatable');
     Route::resource('menu', MenuController::class);
     Route::get('menu-datatable', [MenuController::class, 'datatable'])->name('menudatatable');
+});
+
+// Routes with menu access middleware
+Route::middleware(['auth', 'menu.access'])->group(function () {
     Route::resource('customer', CustomerController::class);
     Route::get('customer-datatable', [CustomerController::class, 'datatable'])->name('customerdatatable');
     Route::resource('type', TypeController::class);
@@ -57,14 +76,28 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('item-purchase', ItemPurchaseController::class);
     Route::get('item-purchase-datatable', [ItemPurchaseController::class, 'datatable'])->name('itempurchasedatatable');
     Route::post('item-purchase/confirm-received', [ItemPurchaseController::class, 'confirmReceived'])->name('item-purchase.confirm');
+
+    // OBS Recording Management
+    Route::resource('recording', RecordingController::class);
+    Route::get('recording-datatable', [RecordingController::class, 'datatable'])->name('recordingdatatable');
+    Route::post('recording/start', [RecordingController::class, 'startRecording'])->name('recording.start');
+    Route::post('recording/stop', [RecordingController::class, 'stopRecording'])->name('recording.stop');
+    Route::post('recording/complete', [RecordingController::class, 'completeRecording'])->name('recording.complete');
+
+    // OBS WebSocket Proxy (untuk HTTPS support)
+    Route::post('recording/obs/connect', [RecordingController::class, 'obsConnect'])->name('recording.obs.connect');
+    Route::post('recording/obs/start-record', [RecordingController::class, 'obsStartRecord'])->name('recording.obs.start');
+    Route::post('recording/obs/stop-record', [RecordingController::class, 'obsStopRecord'])->name('recording.obs.stop');
+    Route::post('recording/obs/disconnect', [RecordingController::class, 'obsDisconnect'])->name('recording.obs.disconnect');
+
     Route::get('transaction-datatable', [TransactionController::class, 'datatable'])->name('transactiondatatable');
     Route::get('transaction-detail/{id}', [TransactionController::class, 'getDetail'])->name('transaction.detail');
     Route::prefix('report')->name('report.')->group(function () {
         Route::get('transaction', [ReportController::class, 'index'])->name('transaction');
     });
-
-    // Gold Rate
 });
+
+// Gold Rate
 Route::get('gold-rate', [GoldRateController::class, 'index'])->name('gold-rate');
 Route::get('gold-rate/fetch', [GoldRateController::class, 'getRate'])->name('gold-rate.fetch');
 

@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Controllers\Administrator;
+namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\Controller;
 use App\Services\UserService;
 
 class UserController extends Controller
@@ -22,9 +22,11 @@ class UserController extends Controller
 
     public function index()
     {
-        return view('administrator.user.index', [
+        $roles = Role::where('is_active', true)->orderBy('name', 'ASC')->get();
+        return view('user.index', [
             'title' => 'User',
-            'active' => 'user'
+            'active' => 'user',
+            'roles' => $roles
         ]);
     }
 
@@ -39,19 +41,16 @@ class UserController extends Controller
         $searchKey = $request->input('searchKey');
 
         // Get the data for the current page
-
+        $data = [];
         // dd($rows, $offset, $searchKey);
         $query = $this->userSvc->getByArrayDT($rows, $offset, $searchKey);
         foreach ($query as $key => $q) {
-            foreach ($query as $key => $q) {
-                $data[$key]['id'] = $q->id;
-                $data[$key]['uuid'] = $q->uuid;
-                $data[$key]['name'] = $q->name;
-                $data[$key]['username'] = $q->username;
-                $data[$key]['role'] = $q->role->name;
-                $data[$key]['role_code'] = $q->role_code;
-                $data[$key]['group_code'] = $q->group_code;
-            }
+            $data[$key]['id'] = $q->id;
+            $data[$key]['uuid'] = $q->uuid;
+            $data[$key]['name'] = $q->name;
+            $data[$key]['username'] = $q->username;
+            $data[$key]['role'] = $q->role ? $q->role->name : '-';
+            $data[$key]['role_code'] = $q->role_code;
         }
 
         // Get the total count of the data

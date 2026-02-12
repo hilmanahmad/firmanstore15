@@ -15,6 +15,8 @@ class GoldRate extends Component
     public $isLoading = true;
     public $error = null;
     public $rateHistory = [];
+    public $promoThreshold = 0; // Harga beli untuk promo
+    public $isPromoActive = false;
 
     // Search dan pagination untuk history
     public $search = '';
@@ -44,6 +46,9 @@ class GoldRate extends Component
                     $this->sellingRate = $data['data']['selling_rate'];
                     $this->spread = $this->sellingRate - $this->buyingRate;
                     $this->lastUpdate = now()->format('H:i:s');
+
+                    // Cek promo
+                    $this->checkPromo();
 
                     // Add to history
                     $this->addToHistory();
@@ -111,6 +116,34 @@ class GoldRate extends Component
         }
 
         return $filtered;
+    }
+
+    public function updatePromoThreshold()
+    {
+        $this->validate([
+            'promoThreshold' => 'nullable|numeric|min:0',
+        ]);
+
+        $this->checkPromo();
+    }
+
+    protected function checkPromo()
+    {
+        $wasPromoActive = $this->isPromoActive;
+
+        if ($this->promoThreshold > 0 && $this->buyingRate >= $this->promoThreshold) {
+            $this->isPromoActive = true;
+
+            // Dispatch event untuk notifikasi browser
+            if (!$wasPromoActive) {
+                $this->dispatch('promoActivated', [
+                    'buyingRate' => $this->buyingRate,
+                    'threshold' => $this->promoThreshold
+                ]);
+            }
+        } else {
+            $this->isPromoActive = false;
+        }
     }
 
     public function formatCurrency($value)

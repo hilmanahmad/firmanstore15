@@ -15,6 +15,7 @@ class ItemPurchase extends Model
     protected $with = ['type'];
     protected $fillable = [
         'id',
+        'user_id',
         'item_id',
         'type_id',
         'purchase_price',
@@ -23,6 +24,11 @@ class ItemPurchase extends Model
         'status', // pending, received
         'received_at',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id');
+    }
 
     public function item()
     {

@@ -1,12 +1,11 @@
 <?php
 
-namespace App\Http\Controllers\Administrator;
+namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\Controller;
-use App\Models\Master\Menu;
-use App\Services\Administrator\MenuService;
+use App\Models\Menu;
+use App\Services\MenuService;
 
 class MenuController extends Controller
 {
@@ -22,9 +21,11 @@ class MenuController extends Controller
 
     public function index()
     {
-        return view('administrator.menu.index', [
+        $menus = Menu::where('is_header', 'true')->orderBy('sort', 'ASC')->get();
+        return view('menu.index', [
             'title' => 'Menu',
-            'active' => 'menu'
+            'active' => 'menu',
+            'parentMenus' => $menus
         ]);
     }
 
@@ -43,14 +44,13 @@ class MenuController extends Controller
         $data = [];
         foreach ($query as $key => $q) {
             $data[$key]['id'] = $q->id;
-            $data[$key]['menu_name'] = $q->menu_name;
+            $data[$key]['name'] = $q->name;
             $data[$key]['url'] = $q->url;
             $data[$key]['icon'] = $q->icon;
             $data[$key]['is_header'] = $q->is_header;
             $data[$key]['have_sub_menu'] = $q->have_sub_menu;
             $data[$key]['parent'] = $q->parent;
             $data[$key]['sort'] = $q->sort;
-            $data[$key]['url'] = $q->url;
         }
 
         // Get the total count of the data
@@ -95,15 +95,16 @@ class MenuController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Menu $role)
+    public function show($id)
     {
-        //
+        $menu = $this->menuSvc->getById($id);
+        return response()->json($menu);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Menu $role)
+    public function edit(Menu $menu)
     {
         //
     }
@@ -111,7 +112,7 @@ class MenuController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Menu $role)
+    public function update(Request $request, Menu $menu)
     {
         //
     }

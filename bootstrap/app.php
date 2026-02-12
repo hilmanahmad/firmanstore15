@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'auth' => \App\Http\Middleware\Authenticate::class,
+            'menu.access' => \App\Http\Middleware\CheckMenuAccess::class,
         ]);
         // Tambahkan middleware ke grup 'api'
         $middleware->appendToGroup('api', [

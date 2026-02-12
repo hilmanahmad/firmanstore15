@@ -29,7 +29,7 @@
                                             <div class="col-md-4 text-right">
                                                 <small class="text-muted">
                                                     <i class="fa fa-info-circle"></i>
-                                                    Mode: 🔒 Backend Proxy
+                                                    Mode: <span id="connection-mode-display">-</span>
                                                 </small>
                                             </div>
                                         </div>

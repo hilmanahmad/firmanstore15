@@ -1,4 +1,4 @@
-// OBS WebSocket Integration - Supports both direct WS and HTTPS backend proxy
+// OBS WebSocket Integration - Supports both direct WS and backend proxy
 let obsWebSocket = null;
 let isConnected = false;
 let currentRecordingCode = null;
@@ -6,13 +6,7 @@ let durationTimer = null;
 let startTime = null;
 let obsPassword = null;
 let messageId = 1;
-
-// Always use backend proxy for security and compatibility
-// Direct WebSocket has issues with:
-// - IPv6 addresses (require square brackets)
-// - Crypto API not available on non-localhost HTTP
-// - HTTPS blocking ws:// connections
-const useProxy = true; // Always use backend proxy for all connections
+let useProxy = false; // Will be set by user choice in dialog
 
 // ===================== CONNECTION =====================
 
@@ -25,20 +19,33 @@ function connectToOBS() {
 }
 
 function connectOBS() {
-    const defaultUrl = "ws://localhost:4455";
+    const defaultUrl = "ws://192.168.125.43:4455";
     const defaultPassword = "1CDOUYOP4stj0BY5";
 
     Swal.fire({
         title: "Koneksi ke OBS",
         html: `
-            <div class="alert alert-info p-2 mb-2" style="font-size:12px;">
-                <strong>🔒 Backend Proxy Mode</strong><br>
-                Koneksi ke OBS melalui server PHP (mendukung akses dari komputer manapun).
+            <div class="form-group text-left mb-3">
+                <label><strong>Mode Koneksi:</strong></label>
+                <div class="custom-control custom-radio">
+                    <input type="radio" id="mode-direct" name="connectionMode" class="custom-control-input" value="direct" checked>
+                    <label class="custom-control-label" for="mode-direct">
+                        🔓 <strong>Direct Connection</strong> (Koneksi langsung dari browser)
+                        <br><small class="text-muted">Lebih cepat, butuh Crypto API</small>
+                    </label>
+                </div>
+                <div class="custom-control custom-radio mt-2">
+                    <input type="radio" id="mode-proxy" name="connectionMode" class="custom-control-input" value="proxy">
+                    <label class="custom-control-label" for="mode-proxy">
+                        🔒 <strong>Backend Proxy</strong> (Melalui server PHP)
+                        <br><small class="text-muted">Mendukung semua browser/protocol</small>
+                    </label>
+                </div>
             </div>
             <div class="form-group text-left">
                 <label>WebSocket URL:</label>
                 <input type="text" id="swal-obs-url" class="form-control" value="${defaultUrl}">
-                <small class="form-text text-muted">URL OBS WebSocket di server (biasanya <code>ws://localhost:4455</code>)</small>
+                <small class="form-text text-muted">IP OBS WebSocket server (misal: <code>ws://192.168.125.43:4455</code>)</small>
             </div>
             <div class="form-group text-left mt-3">
                 <label>Password:</label>
@@ -51,6 +58,10 @@ function connectOBS() {
         preConfirm: () => {
             const url = document.getElementById("swal-obs-url").value;
             const password = document.getElementById("swal-obs-password").value;
+            const mode = document.querySelector(
+                'input[name="connectionMode"]:checked',
+            ).value;
+
             if (!url) {
                 Swal.showValidationMessage("URL tidak boleh kosong");
                 return false;
@@ -59,11 +70,16 @@ function connectOBS() {
                 Swal.showValidationMessage("Password tidak boleh kosong");
                 return false;
             }
-            return { url, password };
+            return { url, password, mode };
         },
     }).then((result) => {
         if (result.isConfirmed) {
-            connectViaProxy(result.value.url, result.value.password);
+            useProxy = result.value.mode === "proxy";
+            if (useProxy) {
+                connectViaProxy(result.value.url, result.value.password);
+            } else {
+                connectDirect(result.value.url, result.value.password);
+            }
         }
     });
 }
@@ -179,8 +195,15 @@ function connectDirect(url, password) {
         Swal.fire({
             icon: "error",
             title: "Crypto API Not Available",
-            html: `<p>Browser Crypto API tidak tersedia di HTTP.</p>
-                   <p>Gunakan <code>localhost</code> atau HTTPS mode.</p>`,
+            html: `<p>Browser Crypto API tidak tersedia.</p>
+                   <p><strong>Solusi:</strong></p>
+                   <ul class="text-left">
+                       <li>Gunakan <strong>Backend Proxy</strong> mode, atau</li>
+                       <li>Akses via HTTPS/localhost</li>
+                   </ul>`,
+            confirmButtonText: "Coba Backend Proxy",
+        }).then(() => {
+            connectOBS(); // Re-open dialog
         });
         return;
     }
@@ -334,6 +357,12 @@ async function generateAuthString(password, salt, challenge) {
 }
 
 async function sha256(message) {
+    // Check if crypto.subtle is available (required for direct mode)
+    if (typeof crypto === "undefined" || !crypto.subtle) {
+        throw new Error(
+            "Crypto API not available. Use Backend Proxy mode instead.",
+        );
+    }
     const msgBuffer = new TextEncoder().encode(message);
     const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
@@ -392,17 +421,25 @@ function updateOBSStatus(connected) {
     const statusBadge = $("#obs-status");
     const btnConnect = $("#btn-connect-obs");
     const btnStart = $("#btn-start-recording");
+    const modeDisplay = $("#connection-mode-display");
 
     if (connected) {
         statusBadge
             .removeClass("badge-secondary badge-danger")
             .addClass("badge-success")
-            .text("Connected" + (useProxy ? " (via Proxy)" : ""));
+            .text("Connected");
         btnConnect
             .text("Disconnect")
             .removeClass("btn-primary")
             .addClass("btn-danger");
         btnStart.prop("disabled", false);
+
+        // Update mode display
+        if (useProxy) {
+            modeDisplay.html("🔒 Backend Proxy");
+        } else {
+            modeDisplay.html("🔓 Direct Connection");
+        }
     } else {
         statusBadge
             .removeClass("badge-success")
@@ -413,6 +450,7 @@ function updateOBSStatus(connected) {
             .removeClass("btn-danger")
             .addClass("btn-primary");
         btnStart.prop("disabled", true);
+        modeDisplay.text("-");
     }
 }
 

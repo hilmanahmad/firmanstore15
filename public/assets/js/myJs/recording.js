@@ -7,12 +7,12 @@ let startTime = null;
 let obsPassword = null;
 let messageId = 1;
 
-// Force backend proxy mode for all connections (solves Crypto API not available on HTTP from non-localhost)
-// Direct WebSocket only works on localhost or HTTPS
-const isLocalhost =
-    window.location.hostname === "localhost" ||
-    window.location.hostname === "127.0.0.1";
-const useProxy = !isLocalhost; // Use proxy unless accessing from localhost
+// Always use backend proxy for security and compatibility
+// Direct WebSocket has issues with:
+// - IPv6 addresses (require square brackets)
+// - Crypto API not available on non-localhost HTTP
+// - HTTPS blocking ws:// connections
+const useProxy = true; // Always use backend proxy for all connections
 
 // ===================== CONNECTION =====================
 
@@ -28,23 +28,17 @@ function connectOBS() {
     const defaultUrl = "ws://localhost:4455";
     const defaultPassword = "1CDOUYOP4stj0BY5";
 
-    let modeInfo = useProxy
-        ? `<div class="alert alert-info p-2 mb-2" style="font-size:12px;">
-               <strong>🔒 Backend Proxy Mode:</strong> Koneksi melalui Laravel backend proxy.<br>
-               Server PHP akan menghubungkan ke OBS WebSocket (mendukung akses dari komputer lain).
-           </div>`
-        : `<div class="alert alert-success p-2 mb-2" style="font-size:12px;">
-               <strong>🔓 Direct Mode:</strong> Koneksi langsung ke OBS WebSocket dari browser (hanya localhost).
-           </div>`;
-
     Swal.fire({
         title: "Koneksi ke OBS",
         html: `
-            ${modeInfo}
+            <div class="alert alert-info p-2 mb-2" style="font-size:12px;">
+                <strong>🔒 Backend Proxy Mode</strong><br>
+                Koneksi ke OBS melalui server PHP (mendukung akses dari komputer manapun).
+            </div>
             <div class="form-group text-left">
                 <label>WebSocket URL:</label>
                 <input type="text" id="swal-obs-url" class="form-control" value="${defaultUrl}">
-                <small class="form-text text-muted">Gunakan <code>ws://localhost:4455</code> jika OBS di PC yang sama</small>
+                <small class="form-text text-muted">URL OBS WebSocket di server (biasanya <code>ws://localhost:4455</code>)</small>
             </div>
             <div class="form-group text-left mt-3">
                 <label>Password:</label>
@@ -69,11 +63,7 @@ function connectOBS() {
         },
     }).then((result) => {
         if (result.isConfirmed) {
-            if (useProxy) {
-                connectViaProxy(result.value.url, result.value.password);
-            } else {
-                connectDirect(result.value.url, result.value.password);
-            }
+            connectViaProxy(result.value.url, result.value.password);
         }
     });
 }

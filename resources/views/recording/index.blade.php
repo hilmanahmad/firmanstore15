@@ -29,11 +29,7 @@
                                             <div class="col-md-4 text-right">
                                                 <small class="text-muted">
                                                     <i class="fa fa-info-circle"></i>
-                                                    @if (request()->getHost() === 'localhost' || request()->getHost() === '127.0.0.1')
-                                                        Mode: 🔓 Direct WebSocket
-                                                    @else
-                                                        Mode: 🔒 Backend Proxy
-                                                    @endif
+                                                    Mode: 🔒 Backend Proxy
                                                 </small>
                                             </div>
                                         </div>

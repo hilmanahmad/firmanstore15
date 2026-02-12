@@ -22,23 +22,27 @@ function connectOBS() {
     const defaultUrl = "ws://192.168.125.43:4455";
     const defaultPassword = "1CDOUYOP4stj0BY5";
 
+    // Auto-detect: check if Crypto API is available for direct mode
+    const hasCryptoAPI = typeof crypto !== "undefined" && crypto.subtle;
+    const defaultMode = hasCryptoAPI ? "direct" : "proxy";
+
     Swal.fire({
         title: "Koneksi ke OBS",
         html: `
             <div class="form-group text-left mb-3">
                 <label><strong>Mode Koneksi:</strong></label>
                 <div class="custom-control custom-radio">
-                    <input type="radio" id="mode-direct" name="connectionMode" class="custom-control-input" value="direct" checked>
-                    <label class="custom-control-label" for="mode-direct">
+                    <input type="radio" id="mode-direct" name="connectionMode" class="custom-control-input" value="direct" ${defaultMode === "direct" ? "checked" : ""} ${!hasCryptoAPI ? "disabled" : ""}>
+                    <label class="custom-control-label" for="mode-direct" ${!hasCryptoAPI ? 'style="opacity:0.5"' : ""}>
                         🔓 <strong>Direct Connection</strong> (Koneksi langsung dari browser)
-                        <br><small class="text-muted">Lebih cepat, butuh Crypto API</small>
+                        <br><small class="text-muted">${hasCryptoAPI ? "Lebih cepat, butuh Crypto API" : "❌ Crypto API tidak tersedia"}</small>
                     </label>
                 </div>
                 <div class="custom-control custom-radio mt-2">
-                    <input type="radio" id="mode-proxy" name="connectionMode" class="custom-control-input" value="proxy">
+                    <input type="radio" id="mode-proxy" name="connectionMode" class="custom-control-input" value="proxy" ${defaultMode === "proxy" ? "checked" : ""}>
                     <label class="custom-control-label" for="mode-proxy">
                         🔒 <strong>Backend Proxy</strong> (Melalui server PHP)
-                        <br><small class="text-muted">Mendukung semua browser/protocol</small>
+                        <br><small class="text-muted">✅ Mendukung semua browser/protocol</small>
                     </label>
                 </div>
             </div>

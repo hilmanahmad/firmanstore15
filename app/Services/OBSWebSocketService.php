@@ -27,18 +27,25 @@ class OBSWebSocketService
             $this->url = $url ?? $this->url;
             $this->password = $password ?? $this->password;
 
+            \Log::info('OBS: Attempting connection', ['url' => $this->url]);
+
             // Create WebSocket client
             $this->client = new Client($this->url, [
                 'timeout' => 10,
             ]);
+
+            \Log::info('OBS: WebSocket client created, waiting for Hello...');
 
             // Step 1: Receive Hello message (op 0)
             $helloRaw = $this->client->receive();
             $hello = json_decode($helloRaw, true);
 
             if (!$hello || ($hello['op'] ?? null) !== 0) {
+                \Log::error('OBS: Invalid Hello message', ['received' => $helloRaw]);
                 return ['status' => false, 'message' => 'Did not receive Hello from OBS. Got: ' . ($helloRaw ?: 'nothing')];
             }
+
+            \Log::info('OBS: Hello received', ['rpcVersion' => $hello['d']['rpcVersion'] ?? null]);
 
             $helloData = $hello['d'];
             $rpcVersion = $helloData['rpcVersion'] ?? 1;
@@ -92,6 +99,11 @@ class OBSWebSocketService
             return ['status' => true, 'message' => 'Connected and authenticated to OBS successfully'];
         } catch (Exception $e) {
             $this->isConnected = false;
+            \Log::error('OBS: Connection failed', [
+                'url' => $this->url,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return ['status' => false, 'message' => 'Failed to connect: ' . $e->getMessage()];
         }
     }

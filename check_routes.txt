@@ -1,0 +1,24 @@
+Di server production, jalankan command ini:
+
+1. Clear all caches:
+   php artisan route:clear
+   php artisan cache:clear
+   php artisan config:clear
+   php artisan view:clear
+
+2. Check if route exists:
+   php artisan route:list | grep recording
+
+3. Check CSRF token di browser:
+   - Buka halaman recording
+   - F12 (Developer Tools)
+   - Console tab
+   - Ketik: $('meta[name="csrf-token"]').attr("content")
+   - Pastikan ada value (bukan undefined/null)
+
+4. Check error log:
+   tail -f storage/logs/laravel.log
+
+5. Pastikan .env di server production punya:
+   APP_URL=http://firmanstore15.devhilman.tech
+   (sesuai domain yang diakses)

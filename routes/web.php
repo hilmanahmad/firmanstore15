@@ -84,12 +84,6 @@ Route::middleware(['auth', 'menu.access'])->group(function () {
     Route::post('recording/stop', [RecordingController::class, 'stopRecording'])->name('recording.stop');
     Route::post('recording/complete', [RecordingController::class, 'completeRecording'])->name('recording.complete');
 
-    // OBS WebSocket Proxy (untuk HTTPS support)
-    Route::post('recording/obs/connect', [RecordingController::class, 'obsConnect'])->name('recording.obs.connect');
-    Route::post('recording/obs/start-record', [RecordingController::class, 'obsStartRecord'])->name('recording.obs.start');
-    Route::post('recording/obs/stop-record', [RecordingController::class, 'obsStopRecord'])->name('recording.obs.stop');
-    Route::post('recording/obs/disconnect', [RecordingController::class, 'obsDisconnect'])->name('recording.obs.disconnect');
-
     Route::get('transaction-datatable', [TransactionController::class, 'datatable'])->name('transactiondatatable');
     Route::get('transaction-detail/{id}', [TransactionController::class, 'getDetail'])->name('transaction.detail');
     Route::prefix('report')->name('report.')->group(function () {
@@ -103,3 +97,11 @@ Route::get('gold-rate/fetch', [GoldRateController::class, 'getRate'])->name('gol
 
 // Buyback Calculator
 Route::get('buyback-calculator', BuybackCalculator::class)->name('buyback-calculator');
+
+// OBS WebSocket Proxy (API endpoints - only auth required, not menu.access)
+Route::middleware(['auth'])->group(function () {
+    Route::post('recording/obs/connect', [RecordingController::class, 'obsConnect'])->name('recording.obs.connect');
+    Route::post('recording/obs/start-record', [RecordingController::class, 'obsStartRecord'])->name('recording.obs.start');
+    Route::post('recording/obs/stop-record', [RecordingController::class, 'obsStopRecord'])->name('recording.obs.stop');
+    Route::post('recording/obs/disconnect', [RecordingController::class, 'obsDisconnect'])->name('recording.obs.disconnect');
+});

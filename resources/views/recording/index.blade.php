@@ -206,6 +206,12 @@
 
 @push('scripts')
     <script type="text/javascript">
+        // OBS Config dari server (sesuai .env)
+        window.OBS_CONFIG = {
+            url: "{{ config('obs.websocket_url', 'ws://localhost:4455') }}",
+            password: "{{ config('obs.websocket_password', '') }}",
+        };
+
         $(function() {
             @if ($isSuperAdmin)
                 initUserSelect();

@@ -19,8 +19,11 @@ function connectToOBS() {
 }
 
 function connectOBS() {
-    const defaultUrl = "ws://192.168.125.43:4455";
-    const defaultPassword = "1CDOUYOP4stj0BY5";
+    // Ambil dari server config (.env) jika tersedia, fallback ke localhost
+    const defaultUrl =
+        (window.OBS_CONFIG && window.OBS_CONFIG.url) || "ws://localhost:4455";
+    const defaultPassword =
+        (window.OBS_CONFIG && window.OBS_CONFIG.password) || "";
 
     // Auto-detect: check if Crypto API is available for direct mode
     const hasCryptoAPI = typeof crypto !== "undefined" && crypto.subtle;

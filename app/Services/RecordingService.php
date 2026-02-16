@@ -80,22 +80,12 @@ class RecordingService
         $stoppedAt = now();
         $duration = $recording->started_at->diffInSeconds($stoppedAt);
 
-        // Gabungkan custom_filename dengan filename dari OBS
-        $finalFilename = $filename;
-        if ($recording->custom_filename && $filename) {
-            // Ambil extension dari filename OBS
-            $extension = pathinfo($filename, PATHINFO_EXTENSION);
-            $obsFilename = pathinfo($filename, PATHINFO_FILENAME);
-
-            // Format: "Custom Name - OBS-Filename.ext"
-            $finalFilename = $recording->custom_filename . ' - ' . $obsFilename . '.' . $extension;
-        }
-
+        // Filename sudah sesuai custom name karena OBS diset via SetProfileParameter sebelum recording
         $recording->update([
             'status' => 'stopped',
             'stopped_at' => $stoppedAt,
             'duration' => $duration,
-            'filename' => $finalFilename,
+            'filename' => $filename,
             'file_path' => $filePath,
         ]);
 
@@ -110,20 +100,9 @@ class RecordingService
             return false;
         }
 
-        // Gabungkan custom_filename dengan filename dari OBS
-        $finalFilename = $filename;
-        if ($recording->custom_filename && $filename) {
-            // Ambil extension dari filename OBS
-            $extension = pathinfo($filename, PATHINFO_EXTENSION);
-            $obsFilename = pathinfo($filename, PATHINFO_FILENAME);
-
-            // Format: "Custom Name - OBS-Filename.ext"
-            $finalFilename = $recording->custom_filename . ' - ' . $obsFilename . '.' . $extension;
-        }
-
         $recording->update([
             'status' => 'completed',
-            'filename' => $finalFilename,
+            'filename' => $filename,
             'file_path' => $filePath,
         ]);
 

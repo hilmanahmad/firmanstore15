@@ -142,6 +142,39 @@ class OBSWebSocketService
         return ['status' => true];
     }
 
+    /**
+     * Send a single command without managing connection (for chaining commands)
+     */
+    protected function sendCommandRaw($command, $data = [])
+    {
+        $requestId = uniqid('req_');
+        $message = json_encode([
+            'op' => 6,
+            'd' => [
+                'requestType' => $command,
+                'requestId' => $requestId,
+                'requestData' => (object) $data,
+            ]
+        ]);
+
+        $this->client->send($message);
+        $response = $this->client->receive();
+        $decoded = json_decode($response, true);
+
+        if ($decoded && ($decoded['op'] ?? null) === 7) {
+            $requestStatus = $decoded['d']['requestStatus'] ?? [];
+            $success = ($requestStatus['result'] ?? false) === true;
+
+            return [
+                'status' => $success,
+                'message' => $success ? "$command OK" : ("$command failed: " . ($requestStatus['comment'] ?? 'Unknown')),
+                'responseData' => $decoded['d']['responseData'] ?? [],
+            ];
+        }
+
+        return ['status' => true, 'responseData' => $decoded];
+    }
+
     public function sendCommand($command, $data = [])
     {
         // Reconnect if needed (each HTTP request is a new PHP process)
@@ -196,14 +229,89 @@ class OBSWebSocketService
         }
     }
 
-    public function startRecording()
+    public function startRecording($customFilename = null)
     {
-        return $this->sendCommand('StartRecord');
+        $reconnect = $this->reconnectFromSession();
+        if (!$reconnect['status']) {
+            return $reconnect;
+        }
+
+        try {
+            // Set custom filename di OBS sebelum mulai recording
+            if ($customFilename) {
+                // Simpan format asli dulu
+                $getResult = $this->sendCommandRaw('GetProfileParameter', [
+                    'parameterCategory' => 'Output',
+                    'parameterName' => 'FilenameFormatting',
+                ]);
+
+                $originalFormat = $getResult['responseData']['parameterValue'] ?? '%CCYY-%MM-%DD %hh-%mm-%ss';
+                session(['obs_original_filename_format' => $originalFormat]);
+
+                \Log::info('OBS: Original filename format', ['format' => $originalFormat]);
+
+                // Set custom filename format
+                $this->sendCommandRaw('SetProfileParameter', [
+                    'parameterCategory' => 'Output',
+                    'parameterName' => 'FilenameFormatting',
+                    'parameterValue' => $customFilename,
+                ]);
+
+                \Log::info('OBS: Set filename format to', ['format' => $customFilename]);
+            }
+
+            // Start recording
+            $result = $this->sendCommandRaw('StartRecord');
+
+            return [
+                'status' => $result['status'],
+                'message' => $result['status'] ? 'Recording started' : ($result['message'] ?? 'Failed to start'),
+            ];
+        } catch (Exception $e) {
+            return ['status' => false, 'message' => 'Start recording failed: ' . $e->getMessage()];
+        } finally {
+            $this->disconnect();
+        }
     }
 
     public function stopRecording()
     {
-        return $this->sendCommand('StopRecord');
+        $reconnect = $this->reconnectFromSession();
+        if (!$reconnect['status']) {
+            return $reconnect;
+        }
+
+        try {
+            // Stop recording
+            $result = $this->sendCommandRaw('StopRecord');
+
+            $outputPath = $result['responseData']['outputPath'] ?? null;
+
+            \Log::info('OBS: StopRecord result', ['outputPath' => $outputPath]);
+
+            // Restore original filename format
+            $originalFormat = session('obs_original_filename_format');
+            if ($originalFormat) {
+                $this->sendCommandRaw('SetProfileParameter', [
+                    'parameterCategory' => 'Output',
+                    'parameterName' => 'FilenameFormatting',
+                    'parameterValue' => $originalFormat,
+                ]);
+
+                \Log::info('OBS: Restored filename format to', ['format' => $originalFormat]);
+                session()->forget('obs_original_filename_format');
+            }
+
+            return [
+                'status' => $result['status'],
+                'message' => $result['status'] ? 'Recording stopped' : ($result['message'] ?? 'Failed to stop'),
+                'outputPath' => $outputPath,
+            ];
+        } catch (Exception $e) {
+            return ['status' => false, 'message' => 'Stop recording failed: ' . $e->getMessage()];
+        } finally {
+            $this->disconnect();
+        }
     }
 
     public function getRecordStatus()

@@ -129,6 +129,7 @@ class RecordingController extends Controller
                 'data' => [
                     'code' => $recording->code,
                     'duration' => $recording->duration,
+                    'filename' => $recording->filename, // Return final filename
                 ]
             ]);
         } catch (\Throwable $th) {
@@ -218,7 +219,9 @@ class RecordingController extends Controller
             return response()->json($connectResult);
         }
 
-        $result = $this->obsService->startRecording();
+        // Pass custom_filename agar OBS simpan file dengan nama custom
+        $customFilename = $request->input('custom_filename');
+        $result = $this->obsService->startRecording($customFilename);
         return response()->json($result);
     }
 

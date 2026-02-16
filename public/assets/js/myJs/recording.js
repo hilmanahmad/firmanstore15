@@ -147,30 +147,35 @@ function connectViaProxy(url, password) {
     });
 }
 
-function sendOBSCommandViaProxy(command) {
+function sendOBSCommandViaProxy(command, extraData = {}) {
     return new Promise((resolve, reject) => {
         let endpoint = "";
         if (command === "StartRecord") endpoint = "/recording/obs/start-record";
         else if (command === "StopRecord")
             endpoint = "/recording/obs/stop-record";
+        else if (command === "SetProfileParameter")
+            endpoint = "/recording/obs/send-command";
         else {
             reject("Unknown command: " + command);
             return;
         }
 
+        let postData = {
+            _token: $('meta[name="csrf-token"]').attr("content"),
+            url: sessionStorage.getItem("obs_url") || "ws://localhost:4455",
+            password: sessionStorage.getItem("obs_password") || obsPassword,
+            ...extraData,
+        };
+
         $.ajax({
             url: endpoint,
             method: "POST",
-            data: {
-                _token: $('meta[name="csrf-token"]').attr("content"),
-                url: sessionStorage.getItem("obs_url") || "ws://localhost:4455",
-                password: sessionStorage.getItem("obs_password") || obsPassword,
-            },
+            data: postData,
             dataType: "json",
             timeout: 15000,
             success: function (response) {
                 if (response.status) {
-                    console.log("✓ OBS " + command + " via proxy OK");
+                    console.log("✓ OBS " + command + " via proxy OK", response);
                     resolve(response);
                 } else {
                     console.error(
@@ -397,7 +402,7 @@ function sendOBSCommandDirect(command, data = {}) {
 
 function sendOBSCommand(command, data = {}) {
     if (useProxy) {
-        return sendOBSCommandViaProxy(command);
+        return sendOBSCommandViaProxy(command, data);
     } else {
         sendOBSCommandDirect(command, data);
         return Promise.resolve();
@@ -506,39 +511,59 @@ function startRecording() {
                 currentRecordingCode = response.data.code;
                 startTime = new Date(response.data.started_at);
 
-                // 2. Tell OBS to start recording
-                sendOBSCommand("StartRecord")
-                    .then(() => {
-                        // Update UI
-                        $("#btn-start-recording").addClass("d-none");
-                        $("#btn-stop-recording").removeClass("d-none");
-                        $("#recording-info").removeClass("d-none");
-                        $("#current-code").text(currentRecordingCode);
-                        $("#current-started").text(
-                            new Date(response.data.started_at).toLocaleString(
-                                "id-ID",
-                            ),
-                        );
-                        startDurationTimer();
+                // 2. Set filename di OBS lalu Start Recording
+                const customFn = $("#custom_filename").val();
 
-                        Swal.fire({
-                            icon: "success",
-                            title: "Recording Dimulai!",
-                            text: "Code: " + currentRecordingCode,
-                            timer: 2000,
+                if (useProxy) {
+                    // Proxy mode: pass custom_filename, backend handles SetProfileParameter
+                    sendOBSCommand("StartRecord", { custom_filename: customFn })
+                        .then(() => {
+                            onRecordingStarted(response);
+                        })
+                        .catch((err) => {
+                            Swal.fire(
+                                "OBS Error",
+                                "Gagal start recording di OBS: " + err,
+                                "error",
+                            );
                         });
+                } else {
+                    // Direct mode: set filename via WebSocket then start
+                    let startSequence = Promise.resolve();
 
-                        $("#custom_filename").prop("disabled", true);
-                        $("#user_id").prop("disabled", true);
-                        $("#notes").prop("disabled", true);
-                    })
-                    .catch((err) => {
-                        Swal.fire(
-                            "OBS Error",
-                            "Gagal start recording di OBS: " + err,
-                            "error",
-                        );
-                    });
+                    if (customFn) {
+                        // Save original format
+                        startSequence = new Promise((resolve) => {
+                            sendOBSCommandDirect("GetProfileParameter", {
+                                parameterCategory: "Output",
+                                parameterName: "FilenameFormatting",
+                            });
+                            // Store original format
+                            window._obsOriginalFormat = null;
+                            setTimeout(() => {
+                                sendOBSCommandDirect("SetProfileParameter", {
+                                    parameterCategory: "Output",
+                                    parameterName: "FilenameFormatting",
+                                    parameterValue: customFn,
+                                });
+                                setTimeout(resolve, 300);
+                            }, 300);
+                        });
+                    }
+
+                    startSequence
+                        .then(() => {
+                            sendOBSCommandDirect("StartRecord");
+                            onRecordingStarted(response);
+                        })
+                        .catch((err) => {
+                            Swal.fire(
+                                "OBS Error",
+                                "Gagal start recording: " + err,
+                                "error",
+                            );
+                        });
+                }
             } else {
                 Swal.fire("Error", response.message, "error");
             }
@@ -551,6 +576,29 @@ function startRecording() {
             );
         },
     });
+}
+
+function onRecordingStarted(response) {
+    // Update UI
+    $("#btn-start-recording").addClass("d-none");
+    $("#btn-stop-recording").removeClass("d-none");
+    $("#recording-info").removeClass("d-none");
+    $("#current-code").text(currentRecordingCode);
+    $("#current-started").text(
+        new Date(response.data.started_at).toLocaleString("id-ID"),
+    );
+    startDurationTimer();
+
+    Swal.fire({
+        icon: "success",
+        title: "Recording Dimulai!",
+        text: "Code: " + currentRecordingCode,
+        timer: 2000,
+    });
+
+    $("#custom_filename").prop("disabled", true);
+    $("#user_id").prop("disabled", true);
+    $("#notes").prop("disabled", true);
 }
 
 function stopRecording() {
@@ -567,19 +615,46 @@ function stopRecording() {
 
     // Tell OBS to stop recording
     sendOBSCommand("StopRecord")
-        .then(() => {
-            setTimeout(() => completeRecording(), 1500);
+        .then((response) => {
+            console.log("StopRecord response:", response);
+            // outputPath ada di response proxy (response.outputPath)
+            setTimeout(() => {
+                completeRecording(response);
+            }, 1000);
         })
         .catch((err) => {
             console.error("OBS StopRecord error:", err);
-            setTimeout(() => completeRecording(), 500);
+            setTimeout(() => completeRecording(null), 500);
         });
 }
 
-function completeRecording() {
+function completeRecording(recordingInfo) {
     const customFilename = $("#custom_filename").val();
-    const filename = customFilename + ".mkv";
-    const filePath = "C:\\Users\\Videos\\" + filename;
+
+    // Extract filename and path from OBS response
+    let obsFilename = null;
+    let obsFilePath = null;
+
+    // Response from proxy: { status: true, outputPath: "C:\\..." }
+    // Response from direct: di-handle via handleOBSResponse
+    if (recordingInfo) {
+        obsFilePath = recordingInfo.outputPath || null;
+
+        if (!obsFilePath && recordingInfo.responseData) {
+            obsFilePath =
+                recordingInfo.responseData.outputPath ||
+                recordingInfo.responseData.savedReplayPath ||
+                null;
+        }
+
+        if (obsFilePath) {
+            obsFilename = obsFilePath.split(/[\\\/]/).pop();
+        }
+    }
+
+    // Jika ada custom filename, file sudah disimpan OBS dengan nama custom
+    let displayFilename =
+        obsFilename || (customFilename ? customFilename + ".mkv" : null);
 
     $.ajax({
         url: "/recording/stop",
@@ -587,8 +662,8 @@ function completeRecording() {
         data: {
             _token: $('meta[name="csrf-token"]').attr("content"),
             code: currentRecordingCode,
-            filename: filename,
-            file_path: filePath,
+            filename: obsFilename,
+            file_path: obsFilePath,
         },
         dataType: "json",
         success: function (response) {
@@ -610,7 +685,7 @@ function completeRecording() {
                 Swal.fire({
                     icon: "success",
                     title: "Recording Selesai!",
-                    html: `<p>File: ${filename}</p><p>Duration: ${response.data.duration}s</p>`,
+                    html: `<p>File: ${response.data.filename || displayFilename}</p><p>Duration: ${response.data.duration}s</p>`,
                 });
 
                 $("#datagrid").datagrid("reload");

@@ -77,13 +77,6 @@ Route::middleware(['auth', 'menu.access'])->group(function () {
     Route::get('item-purchase-datatable', [ItemPurchaseController::class, 'datatable'])->name('itempurchasedatatable');
     Route::post('item-purchase/confirm-received', [ItemPurchaseController::class, 'confirmReceived'])->name('item-purchase.confirm');
 
-    // OBS Recording Management
-    Route::resource('recording', RecordingController::class);
-    Route::get('recording-datatable', [RecordingController::class, 'datatable'])->name('recordingdatatable');
-    Route::post('recording/start', [RecordingController::class, 'startRecording'])->name('recording.start');
-    Route::post('recording/stop', [RecordingController::class, 'stopRecording'])->name('recording.stop');
-    Route::post('recording/complete', [RecordingController::class, 'completeRecording'])->name('recording.complete');
-
     Route::get('transaction-datatable', [TransactionController::class, 'datatable'])->name('transactiondatatable');
     Route::get('transaction-detail/{id}', [TransactionController::class, 'getDetail'])->name('transaction.detail');
     Route::prefix('report')->name('report.')->group(function () {
@@ -98,6 +91,13 @@ Route::get('gold-rate/fetch', [GoldRateController::class, 'getRate'])->name('gol
 // Buyback Calculator
 Route::get('buyback-calculator', BuybackCalculator::class)->name('buyback-calculator');
 
+
+// OBS Recording Management
+Route::resource('recording', RecordingController::class);
+Route::get('recording-datatable', [RecordingController::class, 'datatable'])->name('recordingdatatable');
+Route::post('recording/start', [RecordingController::class, 'startRecording'])->name('recording.start');
+Route::post('recording/stop', [RecordingController::class, 'stopRecording'])->name('recording.stop');
+Route::post('recording/complete', [RecordingController::class, 'completeRecording'])->name('recording.complete');
 // OBS WebSocket Proxy (API endpoints - only auth required, not menu.access)
 Route::post('recording/obs/connect', [RecordingController::class, 'obsConnect'])->name('recording.obs.connect');
 Route::post('recording/obs/start-record', [RecordingController::class, 'obsStartRecord'])->name('recording.obs.start');

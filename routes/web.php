@@ -99,9 +99,7 @@ Route::get('gold-rate/fetch', [GoldRateController::class, 'getRate'])->name('gol
 Route::get('buyback-calculator', BuybackCalculator::class)->name('buyback-calculator');
 
 // OBS WebSocket Proxy (API endpoints - only auth required, not menu.access)
-Route::middleware(['auth'])->group(function () {
-    Route::post('recording/obs/connect', [RecordingController::class, 'obsConnect'])->name('recording.obs.connect');
-    Route::post('recording/obs/start-record', [RecordingController::class, 'obsStartRecord'])->name('recording.obs.start');
-    Route::post('recording/obs/stop-record', [RecordingController::class, 'obsStopRecord'])->name('recording.obs.stop');
-    Route::post('recording/obs/disconnect', [RecordingController::class, 'obsDisconnect'])->name('recording.obs.disconnect');
-});
+Route::post('recording/obs/connect', [RecordingController::class, 'obsConnect'])->name('recording.obs.connect');
+Route::post('recording/obs/start-record', [RecordingController::class, 'obsStartRecord'])->name('recording.obs.start');
+Route::post('recording/obs/stop-record', [RecordingController::class, 'obsStopRecord'])->name('recording.obs.stop');
+Route::post('recording/obs/disconnect', [RecordingController::class, 'obsDisconnect'])->name('recording.obs.disconnect');

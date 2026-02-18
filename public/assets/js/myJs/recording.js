@@ -19,15 +19,33 @@ function connectToOBS() {
 }
 
 function connectOBS() {
-    // Ambil dari server config (.env) jika tersedia, fallback ke localhost
-    const defaultUrl =
-        (window.OBS_CONFIG && window.OBS_CONFIG.url) || "ws://localhost:4455";
-    const defaultPassword =
-        (window.OBS_CONFIG && window.OBS_CONFIG.password) || "";
+    // Ambil daftar OBS settings dari window.OBS_SETTINGS (di-pass dari Blade)
+    const savedSettings = window.OBS_SETTINGS || [];
 
     // Auto-detect: check if Crypto API is available for direct mode
     const hasCryptoAPI = typeof crypto !== "undefined" && crypto.subtle;
     const defaultMode = hasCryptoAPI ? "direct" : "proxy";
+
+    // Build OBS selector options
+    let obsOptionsHtml = "";
+    if (savedSettings.length > 0) {
+        obsOptionsHtml = `
+            <div class="form-group text-left mb-3">
+                <label><strong>Pilih OBS:</strong></label>
+                <select id="swal-obs-select" class="form-control" onchange="onOBSSelectChange()">
+                    <option value="">-- Pilih OBS Tersimpan --</option>
+                    ${savedSettings.map((s) => `<option value="${s.id}" data-url="${s.obs_url}" data-password="${s.obs_password || ""}" ${s.is_default ? "selected" : ""}>${s.obs_name} ${s.is_default ? "⭐" : ""}</option>`).join("")}
+                    <option value="custom">✏️ Input Manual</option>
+                </select>
+            </div>`;
+    }
+
+    // Default values dari selected OBS
+    const defaultObs =
+        savedSettings.find((s) => s.is_default) || savedSettings[0] || null;
+    const defaultUrl = defaultObs ? defaultObs.obs_url : "ws://localhost:4455";
+    const defaultPassword = defaultObs ? defaultObs.obs_password || "" : "";
+    const showManual = savedSettings.length === 0 ? "" : "d-none";
 
     Swal.fire({
         title: "Koneksi ke OBS",
@@ -49,19 +67,34 @@ function connectOBS() {
                     </label>
                 </div>
             </div>
-            <div class="form-group text-left">
-                <label>WebSocket URL:</label>
-                <input type="text" id="swal-obs-url" class="form-control" value="${defaultUrl}">
-                <small class="form-text text-muted">IP OBS WebSocket server (misal: <code>ws://192.168.125.43:4455</code>)</small>
-            </div>
-            <div class="form-group text-left mt-3">
-                <label>Password:</label>
-                <input type="password" id="swal-obs-password" class="form-control" value="${defaultPassword}">
+            ${obsOptionsHtml}
+            <div id="manual-obs-input" class="${showManual}">
+                <div class="form-group text-left">
+                    <label>WebSocket URL:</label>
+                    <input type="text" id="swal-obs-url" class="form-control" value="${defaultUrl}">
+                    <small class="form-text text-muted">IP OBS WebSocket server (misal: <code>ws://192.168.1.10:4455</code>)</small>
+                </div>
+                <div class="form-group text-left mt-3">
+                    <label>Password:</label>
+                    <input type="password" id="swal-obs-password" class="form-control" value="${defaultPassword}">
+                </div>
             </div>
         `,
+        width: 550,
         showCancelButton: true,
         confirmButtonText: "Connect",
         cancelButtonText: "Batal",
+        footer: '<a href="javascript:void(0)" onclick="openOBSSettingsManager()" class="text-primary"><i class="fa fa-cog"></i> Kelola OBS Settings</a>',
+        didOpen: () => {
+            // Auto-select default OBS
+            if (savedSettings.length > 0 && defaultObs) {
+                const select = document.getElementById("swal-obs-select");
+                if (select) {
+                    select.value = defaultObs.id;
+                    onOBSSelectChange();
+                }
+            }
+        },
         preConfirm: () => {
             const url = document.getElementById("swal-obs-url").value;
             const password = document.getElementById("swal-obs-password").value;
@@ -88,6 +121,352 @@ function connectOBS() {
                 connectDirect(result.value.url, result.value.password);
             }
         }
+    });
+}
+
+// Handler saat user pilih OBS dari dropdown
+function onOBSSelectChange() {
+    const select = document.getElementById("swal-obs-select");
+    const manualDiv = document.getElementById("manual-obs-input");
+    const urlInput = document.getElementById("swal-obs-url");
+    const passInput = document.getElementById("swal-obs-password");
+
+    if (!select) return;
+
+    const selected = select.options[select.selectedIndex];
+
+    if (select.value === "" || select.value === "custom") {
+        manualDiv.classList.remove("d-none");
+        if (select.value === "custom") {
+            urlInput.value = "ws://";
+            passInput.value = "";
+        }
+    } else {
+        manualDiv.classList.remove("d-none");
+        urlInput.value = selected.dataset.url || "";
+        passInput.value = selected.dataset.password || "";
+    }
+}
+
+// OBS Settings Manager (CRUD)
+function openOBSSettingsManager() {
+    Swal.close();
+
+    const savedSettings = window.OBS_SETTINGS || [];
+
+    let tableHtml = "";
+    if (savedSettings.length > 0) {
+        tableHtml = `
+            <table class="table table-sm table-bordered" style="font-size:13px;">
+                <thead class="thead-light">
+                    <tr>
+                        <th>Nama</th>
+                        <th>URL</th>
+                        <th>Default</th>
+                        <th style="width:120px">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${savedSettings
+                        .map(
+                            (s) => `
+                        <tr id="obs-row-${s.id}">
+                            <td>${s.obs_name}</td>
+                            <td><code style="font-size:11px">${s.obs_url}</code></td>
+                            <td class="text-center">${s.is_default ? "⭐" : ""}</td>
+                            <td class="text-center">
+                                <button class="btn btn-xs btn-info" onclick="editObsSetting(${s.id})" title="Edit"><i class="fa fa-edit"></i></button>
+                                <button class="btn btn-xs btn-success" onclick="testObsSetting(${s.id})" title="Test"><i class="fa fa-plug"></i></button>
+                                <button class="btn btn-xs btn-danger" onclick="deleteObsSetting(${s.id})" title="Hapus"><i class="fa fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    `,
+                        )
+                        .join("")}
+                </tbody>
+            </table>`;
+    } else {
+        tableHtml =
+            '<p class="text-muted text-center">Belum ada OBS tersimpan</p>';
+    }
+
+    Swal.fire({
+        title: "⚙️ Kelola OBS Settings",
+        html: `
+            <div style="max-height:300px; overflow-y:auto;">
+                ${tableHtml}
+            </div>
+            <hr>
+            <button class="btn btn-primary btn-sm" onclick="addObsSetting()">
+                <i class="fa fa-plus"></i> Tambah OBS Baru
+            </button>
+        `,
+        width: 650,
+        showConfirmButton: true,
+        confirmButtonText: "Tutup",
+        showCancelButton: true,
+        cancelButtonText: "← Kembali ke Connect",
+    }).then((result) => {
+        if (result.dismiss === Swal.DismissReason.cancel) {
+            connectOBS();
+        }
+    });
+}
+
+function addObsSetting() {
+    Swal.fire({
+        title: "Tambah OBS Baru",
+        html: `
+            <div class="form-group text-left">
+                <label>Nama OBS <span class="text-danger">*</span></label>
+                <input type="text" id="obs-name" class="form-control" placeholder="Contoh: OBS Ruang Meeting">
+            </div>
+            <div class="form-group text-left">
+                <label>WebSocket URL <span class="text-danger">*</span></label>
+                <input type="text" id="obs-url" class="form-control" value="ws://" placeholder="ws://192.168.1.10:4455">
+            </div>
+            <div class="form-group text-left">
+                <label>Password</label>
+                <input type="text" id="obs-pass" class="form-control" placeholder="Password OBS WebSocket">
+            </div>
+            <div class="custom-control custom-checkbox text-left">
+                <input type="checkbox" id="obs-default" class="custom-control-input">
+                <label class="custom-control-label" for="obs-default">Jadikan Default</label>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: "Simpan",
+        cancelButtonText: "Batal",
+        preConfirm: () => {
+            const name = document.getElementById("obs-name").value;
+            const url = document.getElementById("obs-url").value;
+            const pass = document.getElementById("obs-pass").value;
+            const isDefault = document.getElementById("obs-default").checked;
+
+            if (!name || !url) {
+                Swal.showValidationMessage("Nama dan URL wajib diisi");
+                return false;
+            }
+            return { name, url, pass, isDefault };
+        },
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: "/recording/obs-settings",
+                method: "POST",
+                data: {
+                    _token: $('meta[name="csrf-token"]').attr("content"),
+                    obs_name: result.value.name,
+                    obs_url: result.value.url,
+                    obs_password: result.value.pass,
+                    is_default: result.value.isDefault ? 1 : 0,
+                },
+                dataType: "json",
+                success: function (response) {
+                    if (response.status) {
+                        // Add to local array
+                        window.OBS_SETTINGS.push(response.data);
+                        Swal.fire("Berhasil", response.message, "success").then(
+                            () => {
+                                openOBSSettingsManager();
+                            },
+                        );
+                    } else {
+                        Swal.fire("Error", response.message, "error");
+                    }
+                },
+                error: function (xhr) {
+                    Swal.fire(
+                        "Error",
+                        xhr.responseJSON?.message || "Gagal menyimpan",
+                        "error",
+                    );
+                },
+            });
+        } else {
+            openOBSSettingsManager();
+        }
+    });
+}
+
+function editObsSetting(id) {
+    const setting = window.OBS_SETTINGS.find((s) => s.id === id);
+    if (!setting) return;
+
+    Swal.fire({
+        title: "Edit OBS Setting",
+        html: `
+            <div class="form-group text-left">
+                <label>Nama OBS <span class="text-danger">*</span></label>
+                <input type="text" id="obs-name" class="form-control" value="${setting.obs_name}">
+            </div>
+            <div class="form-group text-left">
+                <label>WebSocket URL <span class="text-danger">*</span></label>
+                <input type="text" id="obs-url" class="form-control" value="${setting.obs_url}">
+            </div>
+            <div class="form-group text-left">
+                <label>Password</label>
+                <input type="text" id="obs-pass" class="form-control" value="${setting.obs_password || ""}">
+            </div>
+            <div class="custom-control custom-checkbox text-left">
+                <input type="checkbox" id="obs-default" class="custom-control-input" ${setting.is_default ? "checked" : ""}>
+                <label class="custom-control-label" for="obs-default">Jadikan Default</label>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: "Update",
+        cancelButtonText: "Batal",
+        preConfirm: () => {
+            const name = document.getElementById("obs-name").value;
+            const url = document.getElementById("obs-url").value;
+            const pass = document.getElementById("obs-pass").value;
+            const isDefault = document.getElementById("obs-default").checked;
+
+            if (!name || !url) {
+                Swal.showValidationMessage("Nama dan URL wajib diisi");
+                return false;
+            }
+            return { name, url, pass, isDefault };
+        },
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: "/recording/obs-settings/" + id,
+                method: "PUT",
+                data: {
+                    _token: $('meta[name="csrf-token"]').attr("content"),
+                    obs_name: result.value.name,
+                    obs_url: result.value.url,
+                    obs_password: result.value.pass,
+                    is_default: result.value.isDefault ? 1 : 0,
+                },
+                dataType: "json",
+                success: function (response) {
+                    if (response.status) {
+                        // Update local array
+                        const idx = window.OBS_SETTINGS.findIndex(
+                            (s) => s.id === id,
+                        );
+                        if (idx !== -1)
+                            window.OBS_SETTINGS[idx] = response.data;
+                        if (response.data.is_default) {
+                            window.OBS_SETTINGS.forEach((s) => {
+                                if (s.id !== id) s.is_default = false;
+                            });
+                        }
+                        Swal.fire("Berhasil", response.message, "success").then(
+                            () => {
+                                openOBSSettingsManager();
+                            },
+                        );
+                    } else {
+                        Swal.fire("Error", response.message, "error");
+                    }
+                },
+                error: function (xhr) {
+                    Swal.fire(
+                        "Error",
+                        xhr.responseJSON?.message || "Gagal update",
+                        "error",
+                    );
+                },
+            });
+        } else {
+            openOBSSettingsManager();
+        }
+    });
+}
+
+function deleteObsSetting(id) {
+    Swal.fire({
+        title: "Hapus OBS Setting?",
+        text: "Data tidak bisa dikembalikan",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Ya, Hapus",
+        cancelButtonText: "Batal",
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: "/recording/obs-settings/" + id,
+                method: "DELETE",
+                data: {
+                    _token: $('meta[name="csrf-token"]').attr("content"),
+                },
+                dataType: "json",
+                success: function (response) {
+                    if (response.status) {
+                        window.OBS_SETTINGS = window.OBS_SETTINGS.filter(
+                            (s) => s.id !== id,
+                        );
+                        Swal.fire("Berhasil", response.message, "success").then(
+                            () => {
+                                openOBSSettingsManager();
+                            },
+                        );
+                    } else {
+                        Swal.fire("Error", response.message, "error");
+                    }
+                },
+                error: function (xhr) {
+                    Swal.fire(
+                        "Error",
+                        xhr.responseJSON?.message || "Gagal menghapus",
+                        "error",
+                    );
+                },
+            });
+        } else {
+            openOBSSettingsManager();
+        }
+    });
+}
+
+function testObsSetting(id) {
+    const setting = window.OBS_SETTINGS.find((s) => s.id === id);
+    if (!setting) return;
+
+    Swal.fire({
+        title: "Testing koneksi...",
+        html: `Menghubungkan ke <strong>${setting.obs_name}</strong><br><code>${setting.obs_url}</code>`,
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+    });
+
+    $.ajax({
+        url: "/recording/obs-settings/test",
+        method: "POST",
+        data: {
+            _token: $('meta[name="csrf-token"]').attr("content"),
+            obs_url: setting.obs_url,
+            obs_password: setting.obs_password,
+        },
+        dataType: "json",
+        timeout: 15000,
+        success: function (response) {
+            if (response.status) {
+                Swal.fire(
+                    "✅ Berhasil!",
+                    `${setting.obs_name} terhubung`,
+                    "success",
+                ).then(() => {
+                    openOBSSettingsManager();
+                });
+            } else {
+                Swal.fire("❌ Gagal", response.message, "error").then(() => {
+                    openOBSSettingsManager();
+                });
+            }
+        },
+        error: function (xhr) {
+            Swal.fire(
+                "❌ Error",
+                xhr.responseJSON?.message || "Test gagal",
+                "error",
+            ).then(() => {
+                openOBSSettingsManager();
+            });
+        },
     });
 }
 

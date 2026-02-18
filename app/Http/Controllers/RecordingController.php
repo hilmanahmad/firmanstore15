@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\UserObsSetting;
 use App\Services\RecordingService;
 use App\Services\OBSWebSocketService;
 use Illuminate\Http\Request;
@@ -24,12 +25,20 @@ class RecordingController extends Controller
         $user = auth()->user();
         $isSuperAdmin = $user && $user->role_code === 'SUPERADMIN';
 
+        // Ambil OBS settings milik user
+        $obsSettings = UserObsSetting::where('user_id', $user->id)
+            ->where('is_active', 1)
+            ->orderByDesc('is_default')
+            ->orderBy('obs_name')
+            ->get();
+
         return view('recording.index', [
             'title' => 'OBS Recording Management',
             'active' => 'recording',
             'isSuperAdmin' => $isSuperAdmin,
             'currentUserId' => $user ? $user->id : null,
             'currentUserName' => $user ? $user->name : null,
+            'obsSettings' => $obsSettings,
         ]);
     }
 
@@ -245,5 +254,103 @@ class RecordingController extends Controller
         $this->obsService->disconnect();
         session()->forget(['obs_url', 'obs_password', 'obs_connected']);
         return response()->json(['status' => true, 'message' => 'Disconnected from OBS']);
+    }
+
+    // ===================== OBS Settings CRUD =====================
+
+    public function obsSettingsStore(Request $request)
+    {
+        try {
+            $request->validate([
+                'obs_name' => 'required|string|max:100',
+                'obs_url' => 'required|string|max:255',
+                'obs_password' => 'nullable|string|max:255',
+            ]);
+
+            $userId = auth()->id();
+
+            // Jika is_default, unset default lain
+            if ($request->is_default) {
+                UserObsSetting::where('user_id', $userId)->update(['is_default' => 0]);
+            }
+
+            // Jika ini setting pertama, jadikan default
+            $count = UserObsSetting::where('user_id', $userId)->where('is_active', 1)->count();
+
+            $setting = UserObsSetting::create([
+                'user_id' => $userId,
+                'obs_name' => $request->obs_name,
+                'obs_url' => $request->obs_url,
+                'obs_password' => $request->obs_password,
+                'is_default' => $request->is_default || $count === 0 ? 1 : 0,
+                'is_active' => 1,
+            ]);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'OBS Setting berhasil disimpan',
+                'data' => $setting,
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json(['status' => false, 'message' => $th->getMessage()]);
+        }
+    }
+
+    public function obsSettingsUpdate(Request $request, $id)
+    {
+        try {
+            $setting = UserObsSetting::where('id', $id)->where('user_id', auth()->id())->firstOrFail();
+
+            $request->validate([
+                'obs_name' => 'required|string|max:100',
+                'obs_url' => 'required|string|max:255',
+                'obs_password' => 'nullable|string|max:255',
+            ]);
+
+            if ($request->is_default) {
+                UserObsSetting::where('user_id', auth()->id())->where('id', '!=', $id)->update(['is_default' => 0]);
+            }
+
+            $setting->update([
+                'obs_name' => $request->obs_name,
+                'obs_url' => $request->obs_url,
+                'obs_password' => $request->obs_password,
+                'is_default' => $request->is_default ? 1 : 0,
+            ]);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'OBS Setting berhasil diupdate',
+                'data' => $setting,
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json(['status' => false, 'message' => $th->getMessage()]);
+        }
+    }
+
+    public function obsSettingsDestroy($id)
+    {
+        try {
+            $setting = UserObsSetting::where('id', $id)->where('user_id', auth()->id())->firstOrFail();
+            $setting->delete();
+
+            return response()->json(['status' => true, 'message' => 'OBS Setting berhasil dihapus']);
+        } catch (\Throwable $th) {
+            return response()->json(['status' => false, 'message' => $th->getMessage()]);
+        }
+    }
+
+    public function obsSettingsTest(Request $request)
+    {
+        try {
+            $result = $this->obsService->connect(
+                $request->input('obs_url'),
+                $request->input('obs_password')
+            );
+
+            return response()->json($result);
+        } catch (\Throwable $th) {
+            return response()->json(['status' => false, 'message' => $th->getMessage()]);
+        }
     }
 }

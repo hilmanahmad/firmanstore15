@@ -100,4 +100,20 @@ class User extends Authenticatable
     {
         return in_array($this->role_code, ['ADMIN', 'SUPERADMIN']);
     }
+
+    /**
+     * Get user's OBS settings
+     */
+    public function obsSettings()
+    {
+        return $this->hasMany(UserObsSetting::class)->where('is_active', 1);
+    }
+
+    /**
+     * Get user's default OBS setting
+     */
+    public function defaultObsSetting()
+    {
+        return $this->hasOne(UserObsSetting::class)->where('is_default', 1)->where('is_active', 1);
+    }
 }

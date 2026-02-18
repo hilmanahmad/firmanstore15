@@ -103,3 +103,9 @@ Route::post('recording/obs/connect', [RecordingController::class, 'obsConnect'])
 Route::post('recording/obs/start-record', [RecordingController::class, 'obsStartRecord'])->name('recording.obs.start');
 Route::post('recording/obs/stop-record', [RecordingController::class, 'obsStopRecord'])->name('recording.obs.stop');
 Route::post('recording/obs/disconnect', [RecordingController::class, 'obsDisconnect'])->name('recording.obs.disconnect');
+
+// OBS Settings per-user
+Route::post('recording/obs-settings', [RecordingController::class, 'obsSettingsStore'])->name('recording.obs-settings.store');
+Route::put('recording/obs-settings/{id}', [RecordingController::class, 'obsSettingsUpdate'])->name('recording.obs-settings.update');
+Route::delete('recording/obs-settings/{id}', [RecordingController::class, 'obsSettingsDestroy'])->name('recording.obs-settings.destroy');
+Route::post('recording/obs-settings/test', [RecordingController::class, 'obsSettingsTest'])->name('recording.obs-settings.test');

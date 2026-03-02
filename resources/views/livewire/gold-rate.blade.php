@@ -207,10 +207,10 @@
                                                     <th class="text-center">Waktu</th>
                                                     <th class="text-right">Harga Beli</th>
                                                     <th class="text-right">Harga Jual</th>
-                                                    <th class="text-right">Est. cuan 20 JT</th>
                                                     <th class="text-right">Est. cuan 30 JT</th>
                                                     <th class="text-right">Est. cuan 40 JT</th>
                                                     <th class="text-right">Est. cuan 50 JT</th>
+                                                    <th class="text-right">Est. cuan 60 JT</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -223,10 +223,6 @@
                                                         <td class="text-right text-danger font-weight-bold">
                                                             {{ $this->formatCurrency($item['selling_rate']) }}</td>
                                                         <td
-                                                            class="text-right {{ $item['est_cuan_20'] >= 0 ? '' : 'text-danger' }}">
-                                                            {{ $this->formatCurrency($item['est_cuan_20']) }}
-                                                        </td>
-                                                        <td
                                                             class="text-right {{ $item['est_cuan_30'] >= 0 ? '' : 'text-danger' }}">
                                                             {{ $this->formatCurrency($item['est_cuan_30']) }}
                                                         </td>
@@ -237,6 +233,10 @@
                                                         <td
                                                             class="text-right {{ $item['est_cuan_50'] >= 0 ? '' : 'text-danger' }}">
                                                             {{ $this->formatCurrency($item['est_cuan_50']) }}
+                                                        </td>
+                                                        <td
+                                                            class="text-right {{ $item['est_cuan_60'] >= 0 ? '' : 'text-danger' }}">
+                                                            {{ $this->formatCurrency($item['est_cuan_60']) }}
                                                         </td>
                                                     </tr>
                                                 @empty

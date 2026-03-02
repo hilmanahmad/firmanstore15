@@ -80,10 +80,10 @@ class GoldRate extends Component
 
     protected function addToHistory()
     {
-        $estCuan20JT = round((20000000 / $this->buyingRate) * $this->sellingRate) - 19330000;
-        $estCuan30JT = round((30000000 / $this->buyingRate) * $this->sellingRate) - 28995000;
-        $estCuan40JT = round((40000000 / $this->buyingRate) * $this->sellingRate) - 38660000;
-        $estCuan50JT = round((50000000 / $this->buyingRate) * $this->sellingRate) - 48325000;
+        $estCuan30JT = round((30000000 / $this->buyingRate) * $this->sellingRate) - 29004000;
+        $estCuan40JT = round((40000000 / $this->buyingRate) * $this->sellingRate) - 38672000;
+        $estCuan50JT = round((50000000 / $this->buyingRate) * $this->sellingRate) - 48340000;
+        $estCuan60JT = round((60000000 / $this->buyingRate) * $this->sellingRate) - 58005000;
 
         // Tambah ke awal array (terbaru di atas)
         array_unshift($this->rateHistory, [
@@ -91,10 +91,10 @@ class GoldRate extends Component
             'time' => now()->format('d/m/Y H:i:s'),
             'buying_rate' => $this->buyingRate,
             'selling_rate' => $this->sellingRate,
-            'est_cuan_20' => $estCuan20JT,
             'est_cuan_30' => $estCuan30JT,
             'est_cuan_40' => $estCuan40JT,
             'est_cuan_50' => $estCuan50JT,
+            'est_cuan_60' => $estCuan60JT,
         ]);
 
         // Update nomor urut

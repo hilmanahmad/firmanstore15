@@ -79,6 +79,7 @@ Route::middleware(['auth', 'menu.access'])->group(function () {
 
     Route::get('transaction-datatable', [TransactionController::class, 'datatable'])->name('transactiondatatable');
     Route::get('transaction-detail/{id}', [TransactionController::class, 'getDetail'])->name('transaction.detail');
+    Route::delete('transaction-delete-group/{noTrans}', [TransactionController::class, 'deleteGroup'])->name('transaction.deleteGroup');
     Route::prefix('report')->name('report.')->group(function () {
         Route::get('transaction', [ReportController::class, 'index'])->name('transaction');
     });

@@ -145,6 +145,38 @@ class TransactionService
         $this->transaction->where('id', $id)->delete();
         $this->transactionDetail->where('transaction_id', $id)->delete();
     }
+
+    public function destroyGroup($noTrans)
+    {
+        // Get all transactions with the same no_trans
+        $transactions = Transaction::where('no_trans', $noTrans)->get();
+
+        if ($transactions->isEmpty()) {
+            throw new \Exception("Transaksi tidak ditemukan");
+        }
+
+        foreach ($transactions as $transaction) {
+            // Get transaction details
+            $tranDetails = TransactionDetail::where('transaction_id', $transaction->id)->get();
+
+            // Restore stock for each detail
+            foreach ($tranDetails as $td) {
+                $itemHist = ItemHistory::where('id', $td->item_history_id)->first();
+                if ($itemHist) {
+                    $itemHist->update([
+                        'qty_sold' => $itemHist->qty_sold - $td->qty
+                    ]);
+                }
+            }
+
+            // Delete transaction details
+            TransactionDetail::where('transaction_id', $transaction->id)->delete();
+        }
+
+        // Delete all transactions with the same no_trans
+        Transaction::where('no_trans', $noTrans)->delete();
+    }
+
     public function update($request)
     {
         $noTrans = $request->no_trans;

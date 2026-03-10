@@ -237,4 +237,23 @@ class TransactionController extends Controller
             ]);
         }
     }
+
+    /**
+     * Delete all transactions with the same no_trans (transaction group)
+     */
+    public function deleteGroup($noTrans)
+    {
+        try {
+            DB::beginTransaction();
+
+            $this->transaction->destroyGroup($noTrans);
+
+            DB::commit();
+
+            echo json_encode(['status' => true, 'message' => 'Transaksi berhasil dihapus']);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            echo json_encode(['status' => false, 'message' => $th->getMessage()]);
+        }
+    }
 }

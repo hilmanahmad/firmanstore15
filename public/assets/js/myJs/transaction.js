@@ -141,10 +141,10 @@ function showDetailModal(data) {
                                     <tr class="bg-info text-white">
                                         <td class="text-right" width="70%"><strong>GRAND TOTAL:</strong></td>
                                         <td class="text-right" width="15%"><strong>Rp ${grandTotal.toLocaleString(
-                                            "id-ID"
+                                            "id-ID",
                                         )}</strong></td>
                                         <td class="text-right" width="15%"><strong>Rp ${totalProfit.toLocaleString(
-                                            "id-ID"
+                                            "id-ID",
                                         )}</strong></td>
                                     </tr>
                                 </table>
@@ -234,7 +234,7 @@ function generateReceipt(data) {
                     item.selling_price
                 }</td>
                 <td style="padding: 8px 5px; border-bottom: 1px dashed #ddd; text-align: right;">Rp ${itemTotal.toLocaleString(
-                    "id-ID"
+                    "id-ID",
                 )}</td>
             </tr>
         `;
@@ -709,7 +709,7 @@ function editTransaction(noTrans) {
                     {
                         scrollTop: $("#formData").offset().top - 100,
                     },
-                    500
+                    500,
                 );
             } else {
                 failed(response.message);
@@ -796,7 +796,7 @@ function populateEditForm(data) {
 
         // Format harga
         let priceInput = $(
-            `input[name="items[${itemRowCounter}][selling_price]"]`
+            `input[name="items[${itemRowCounter}][selling_price]"]`,
         );
         formatNumberRow(priceInput[0]);
 

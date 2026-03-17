@@ -130,6 +130,7 @@
                             <h4 class="card-title">Grafik Penjualan Harian</h4>
                         </div>
                     </div>
+                    <script type="application/json" id="chartDataSource">@json($chart_data ?? ['labels' => ['No Data'], 'datasets' => []])</script>
                     <div class="iq-card-body" wire:ignore>
                         <!-- Debug info -->
                         <div id="chartDebug" style="font-size: 12px; color: #666; margin-bottom: 10px;">
@@ -261,6 +262,25 @@
     let salesChart = null;
     let latestChartData = @json($chart_data ?? ['labels' => ['No Data'], 'datasets' => []]);
 
+    function getChartDataFromDom() {
+        const source = document.getElementById('chartDataSource');
+        if (!source) {
+            return latestChartData;
+        }
+
+        try {
+            const parsed = JSON.parse(source.textContent || '{}');
+            if (parsed && Array.isArray(parsed.labels) && Array.isArray(parsed.datasets)) {
+                latestChartData = parsed;
+                return parsed;
+            }
+        } catch (error) {
+            console.error('Failed parsing chartDataSource:', error);
+        }
+
+        return latestChartData;
+    }
+
     function updateDebug(message) {
         const debugEl = document.getElementById('chartDebug');
         if (debugEl) {
@@ -274,7 +294,7 @@
 
         try {
             // Get chart data from latest payload / initial render
-            const chartData = incomingChartData || latestChartData || {
+            const chartData = incomingChartData || getChartDataFromDom() || {
                 labels: ['No Data'],
                 datasets: []
             };
@@ -524,11 +544,12 @@
 
     // 2. Livewire updated (saat component di-refresh)
     document.addEventListener('livewire:updated', function() {
-        updateDebug('🔄 Livewire updated - menunggu payload chart terbaru...');
+        updateDebug('🔄 Livewire updated - render ulang chart...');
+        setTimeout(() => renderChart(getChartDataFromDom()), 100);
     });
 
     // 3. Custom Livewire events
-    if (typeof Livewire !== 'undefined') {
+    document.addEventListener('livewire:init', () => {
         // Event saat chart data di-update
         Livewire.on('chartDataUpdated', (payload) => {
             const payloadObj = Array.isArray(payload) ? (payload[0] || {}) : (payload || {});
@@ -542,7 +563,7 @@
                 return;
             }
 
-            setTimeout(renderChart, 200);
+            setTimeout(() => renderChart(getChartDataFromDom()), 200);
         });
 
         // Event saat filter berubah
@@ -552,7 +573,7 @@
                 (payload || 'periode terpilih');
             updateDebug(`🔍 Filter changed to: ${filterName}`);
         });
-    }
+    });
 
     // Manual refresh function
     window.refreshChart = function() {

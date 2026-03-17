@@ -89,9 +89,11 @@ class Dashboard extends Component
         // HAPUS refreshChartData() dari sini - akan membuat circular call
         // $this->refreshChartData(); ← HAPUS INI!
 
-        // Emit events saja
+        // Refresh chart data lalu kirim payload agar chart update realtime
+        $chartData = $this->refreshChartData();
+
         $this->dispatch('filterChanged', $filterName);
-        $this->dispatch('chartDataUpdated');
+        $this->dispatch('chartDataUpdated', chartData: $chartData, filterName: $filterName);
     }
 
     public function getDashboardData()
@@ -190,9 +192,9 @@ class Dashboard extends Component
                 ->orderBy('date')
                 ->get();
 
-            // Buat range tanggal lengkap untuk memastikan semua tanggal ada
-            $startDate = Carbon::today()->subDays(29)->toDateString();
-            $endDate = Carbon::today()->toDateString();
+            // Buat range tanggal sesuai filter periode terpilih
+            $startDate = $this->startDate;
+            $endDate = $this->endDate;
             $dateRange = [];
             $current = Carbon::parse($startDate);
 
@@ -330,7 +332,7 @@ class Dashboard extends Component
         $this->refreshChartData();
 
         // Emit events
-        $this->dispatch('chartDataUpdated');
+        $this->dispatch('chartDataUpdated', chartData: $this->chart_data, filterName: 'Manual Refresh');
         $this->dispatch('dashboardDataUpdated');
     }
 
@@ -343,7 +345,7 @@ class Dashboard extends Component
         $this->refreshChartData();
 
         // Emit event
-        $this->dispatch('chartDataUpdated');
+        $this->dispatch('chartDataUpdated', chartData: $this->chart_data, filterName: 'Manual Refresh');
     }
 
     public function refreshChartData()

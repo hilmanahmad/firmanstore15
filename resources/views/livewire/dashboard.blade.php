@@ -259,6 +259,7 @@
 <!-- Di body, setelah canvas -->
 <script>
     let salesChart = null;
+    let latestChartData = @json($chart_data ?? ['labels' => ['No Data'], 'datasets' => []]);
 
     function updateDebug(message) {
         const debugEl = document.getElementById('chartDebug');
@@ -268,12 +269,17 @@
         console.log('Chart Debug:', message);
     }
 
-    async function renderChart() {
+    async function renderChart(incomingChartData = null) {
         updateDebug('🔄 Memulai render chart...');
 
         try {
-            // Get chart data from Laravel
-            const chartData = @json($chart_data ?? ['labels' => ['No Data'], 'data' => [0]]);
+            // Get chart data from latest payload / initial render
+            const chartData = incomingChartData || latestChartData || {
+                labels: ['No Data'],
+                datasets: []
+            };
+
+            latestChartData = chartData;
             console.log(chartData);
 
             updateDebug('📊 Data chart diterima: ' + JSON.stringify(chartData));
@@ -518,22 +524,33 @@
 
     // 2. Livewire updated (saat component di-refresh)
     document.addEventListener('livewire:updated', function() {
-        updateDebug('🔄 Livewire updated - refreshing chart with fresh data...');
-        setTimeout(renderChart, 300);
+        updateDebug('🔄 Livewire updated - menunggu payload chart terbaru...');
     });
 
     // 3. Custom Livewire events
     if (typeof Livewire !== 'undefined') {
         // Event saat chart data di-update
-        Livewire.on('chartDataUpdated', () => {
-            updateDebug('📈 Chart data updated event - getting fresh data...');
+        Livewire.on('chartDataUpdated', (payload) => {
+            const payloadObj = Array.isArray(payload) ? (payload[0] || {}) : (payload || {});
+            const freshChartData = payloadObj.chartData || payloadObj.chart_data || null;
+            const filterName = payloadObj.filterName || payloadObj.filter_name || 'periode terpilih';
+
+            updateDebug(`📈 Chart data updated (${filterName})`);
+
+            if (freshChartData) {
+                setTimeout(() => renderChart(freshChartData), 100);
+                return;
+            }
+
             setTimeout(renderChart, 200);
         });
 
         // Event saat filter berubah
-        Livewire.on('filterChanged', (filterName) => {
-            updateDebug(`🔍 Filter changed to: ${filterName} - updating chart...`);
-            setTimeout(renderChart, 300);
+        Livewire.on('filterChanged', (payload) => {
+            const filterName = Array.isArray(payload) ?
+                (payload[0] || 'periode terpilih') :
+                (payload || 'periode terpilih');
+            updateDebug(`🔍 Filter changed to: ${filterName}`);
         });
     }
 
